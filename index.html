@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="やまねこ亭">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%235a3a1a' width='180' height='180' rx='30'/><text x='90' y='125' text-anchor='middle' font-size='100'>🐾</text></svg>">
+<title>やまねこ亭 国語クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: 'DotGothic16', 'Hiragino Kaku Gothic ProN', sans-serif;
+    background: #5a3a1a;
+    color: #3b2a14;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* === SKY + GROUND === */
+  .scene {
+    background: linear-gradient(180deg, #7ec8e3 0%, #a8dce8 60%, #5d8c3e 60%, #4a7a2e 100%);
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    border-bottom: 4px solid #3d5c1e;
+  }
+  .scene .clouds {
+    position: absolute; top: 15px; width: 100%;
+  }
+  .cloud {
+    position: absolute;
+    background: #fff;
+    border-radius: 2px;
+    opacity: 0.85;
+  }
+  .cloud1 { width:40px; height:12px; top:10px; left:15%; }
+  .cloud1::after { content:''; position:absolute; background:#fff; width:24px; height:10px; top:-7px; left:8px; border-radius:2px; }
+  .cloud2 { width:50px; height:14px; top:25px; left:60%; }
+  .cloud2::after { content:''; position:absolute; background:#fff; width:30px; height:10px; top:-7px; left:10px; border-radius:2px; }
+  .cloud3 { width:35px; height:10px; top:5px; left:40%; }
+
+  /* === PIXEL CHARACTERS === */
+  .characters {
+    position: absolute;
+    bottom: 18px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 20px;
+  }
+  .char-container { position: relative; }
+  .char-name {
+    text-align: center;
+    font-size: 11px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333;
+    margin-bottom: 2px;
+    letter-spacing: 1px;
+  }
+  canvas.char-sprite { image-rendering: pixelated; display: block; margin: 0 auto; }
+
+  /* grass blocks */
+  .grass-row {
+    position: absolute; bottom: 0; width: 100%; height: 18px;
+    display: flex;
+  }
+  .grass-block {
+    flex: 1;
+    background: linear-gradient(180deg, #5d8c3e 0%, #5d8c3e 35%, #8B6914 35%, #7a5c12 100%);
+    border-right: 1px solid #4a7a2e;
+  }
+
+  /* === MAIN CONTENT === */
+  .content {
+    flex: 1;
+    background: #f5e6c8;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 31px, #e8d5a3 31px, #e8d5a3 32px),
+      repeating-linear-gradient(90deg, transparent, transparent 31px, #e8d5a3 31px, #e8d5a3 32px);
+    padding: 16px;
+    position: relative;
+  }
+  .content::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(90deg, #8B6914 0px, #8B6914 15px, #7a5c12 15px, #7a5c12 16px, #8B6914 16px, #8B6914 32px);
+  }
+
+  /* === TITLE SCREEN === */
+  .title-screen {
+    text-align: center;
+    padding-top: 10px;
+  }
+  .title-screen h1 {
+    font-size: 26px;
+    color: #3b2a14;
+    text-shadow: 2px 2px 0 #d4b896;
+    margin-bottom: 8px;
+    letter-spacing: 3px;
+  }
+  .title-screen .subtitle {
+    font-size: 14px;
+    color: #6b5a3a;
+    margin-bottom: 20px;
+  }
+
+  /* === BUTTONS === */
+  .mc-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+    padding: 14px 20px;
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 17px;
+    color: #fff;
+    background: linear-gradient(180deg, #6aaa3a 0%, #4a8a2a 50%, #3d7a1e 100%);
+    border: 3px solid #2d5a0e;
+    border-radius: 4px;
+    box-shadow: inset 0 -3px 0 #2d5a0e, inset 0 3px 0 #7ec050;
+    cursor: pointer;
+    text-shadow: 1px 1px 0 #2d5a0e;
+    letter-spacing: 2px;
+    -webkit-appearance: none;
+  }
+  .mc-btn:active {
+    transform: translateY(2px);
+    box-shadow: inset 0 -1px 0 #2d5a0e, inset 0 3px 0 #7ec050;
+  }
+  .mc-btn.gray {
+    background: linear-gradient(180deg, #8a8a8a 0%, #6a6a6a 50%, #555 100%);
+    border-color: #444;
+    box-shadow: inset 0 -3px 0 #444, inset 0 3px 0 #aaa;
+    text-shadow: 1px 1px 0 #333;
+  }
+  .reread-btn {
+    margin-top: 16px;
+    background: linear-gradient(180deg, #c9a84c 0%, #a88832 50%, #8a6e20 100%);
+    border-color: #6b5518;
+    box-shadow: inset 0 -3px 0 #6b5518, inset 0 3px 0 #e0c060;
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+
+  /* === STORY TEXT === */
+  .story-header {
+    text-align: center;
+    font-size: 14px;
+    color: #6b5a3a;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 2px dashed #cdb98a;
+  }
+  /* スマホでは左カラムの本文を非表示（もういちど読むで読む） */
+  .quiz-landscape .ql-story { display: none; }
+  .quiz-landscape .ql-right { flex: 1; }
+  .quiz-landscape { display: block; }
+  .story-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #3b2a14;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.5);
+    border: 2px solid #cdb98a;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    max-height: 45vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* === QUIZ === */
+  .quiz-header {
+    font-size: 15px;
+    color: #8B6914;
+    margin-bottom: 6px;
+  }
+  .quiz-question {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #3b2a14;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.5);
+    border: 2px solid #cdb98a;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .choice-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 15px;
+    color: #3b2a14;
+    background: linear-gradient(180deg, #f5e6c8, #e8d5a3);
+    border: 2px solid #b89a6a;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    -webkit-appearance: none;
+    line-height: 1.5;
+  }
+  .choice-btn:active { background: #e0cda0; }
+  .choice-btn.correct {
+    background: linear-gradient(180deg, #a8e6a0, #7dcc70) !important;
+    border-color: #4a9a3a !important;
+    color: #1a4a10 !important;
+  }
+  .choice-btn.wrong {
+    background: linear-gradient(180deg, #e6a0a0, #cc7070) !important;
+    border-color: #9a3a3a !important;
+    color: #4a1010 !important;
+  }
+  .choice-btn:disabled { opacity: 0.85; }
+
+  /* === RESULT FEEDBACK === */
+  .result-box {
+    padding: 8px 10px;
+    border-radius: 4px;
+    margin: 6px 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .result-box.correct {
+    background: #d4f5d0;
+    border: 2px solid #6abf5a;
+    color: #2a6a1a;
+  }
+  .result-box.wrong {
+    background: #f5d0d0;
+    border: 2px solid #bf5a5a;
+    color: #6a1a1a;
+  }
+
+  /* === PROGRESS BAR === */
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #cdb98a;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    border: 1px solid #b89a6a;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6aaa3a, #4a8a2a);
+    border-radius: 5px;
+    transition: width 0.4s ease;
+  }
+
+  /* === SCORE === */
+  .score-display {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5a3a;
+    margin-bottom: 4px;
+  }
+  .score-display .num { color: #4a8a2a; font-size: 18px; }
+
+  /* === FINAL SCREEN === */
+  .final-score {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .final-score h2 {
+    font-size: 22px;
+    color: #3b2a14;
+    margin-bottom: 16px;
+  }
+  .final-score .big-score {
+    font-size: 48px;
+    color: #4a8a2a;
+    margin: 10px 0;
+  }
+  .final-score .big-score span { font-size: 20px; color: #6b5a3a; }
+  .stars { font-size: 36px; margin: 10px 0; }
+
+  /* === BOUNCE ANIM === */
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .bounce { animation: bounce 0.5s ease; }
+
+  /* speech bubble */
+  .speech {
+    position: absolute;
+    background: #fff;
+    border: 2px solid #3b2a14;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #3b2a14;
+    white-space: nowrap;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 6px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .speech.show { opacity: 1; }
+  .speech::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid #3b2a14;
+  }
+
+  /* === iPad 横向き (幅768px以上) === */
+  @media (min-width: 768px) {
+    #app {
+      max-width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .scene {
+      width: 100%;
+      height: 120px;
+      flex-shrink: 0;
+    }
+    .characters { gap: 30px; }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 24px;
+    }
+    /* 2カラム: 本文(左) + クイズ(右) */
+    .quiz-landscape {
+      display: flex !important;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .quiz-landscape .ql-story {
+      display: block !important;
+      flex: 1;
+      min-width: 0;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      font-size: 14px;
+      line-height: 1.75;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.5);
+      border: 2px solid #cdb98a;
+      border-radius: 4px;
+    }
+    .quiz-landscape .ql-right {
+      flex: 1;
+      min-width: 0;
+    }
+    /* 横向きクイズ画面では「もういちど読む」不要（左に常時表示） */
+    .quiz-landscape .reread-btn { display: none; }
+    .story-text {
+      max-height: calc(100vh - 260px);
+    }
+    .mc-btn {
+      padding: 10px 20px;
+      font-size: 15px;
+    }
+    .choice-btn {
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+    .title-screen h1 { font-size: 30px; }
+    .final-score .big-score { font-size: 42px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Scene with characters -->
+  <div class="scene">
+    <div class="clouds">
+      <div class="cloud cloud1"></div>
+      <div class="cloud cloud2"></div>
+      <div class="cloud cloud3"></div>
+    </div>
+    <div class="characters" id="characters"></div>
+    <div class="grass-row" id="grassRow"></div>
+  </div>
+
+  <!-- Content area -->
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ===== PIXEL ART CHARACTERS =====
+const SPRITES = {
+  yuuki: { // Alex-style female
+    width: 12, height: 20,
+    pixels: [
+      '..OOOOOO....',
+      '..OOOOOO....',
+      '.OOOOOOOO...',
+      '.OSSSSSSOO..',
+      '.OSSEESESO..',
+      '..SSSSSS....',
+      '..SSMMSS....',
+      '...GGGG.....',
+      '..GGGGGG....',
+      '..GSGGSG....',
+      '..GSGGSG....',
+      '..GGGGGG....',
+      '..SGGGSS....',
+      '...BBBB.....',
+      '...BBBB.....',
+      '...BBBB.....',
+      '...B..B.....',
+      '...B..B.....',
+      '..DD..DD....',
+      '..DD..DD....',
+    ],
+    colors: { O:'#C26216', S:'#D4A574', E:'#3B2A14', M:'#C27070', G:'#5D8C3E', B:'#8B6914', D:'#4a3a1a' }
+  },
+  kent: { // Steve-style male
+    width: 12, height: 20,
+    pixels: [
+      '..BBBBBB....',
+      '..BBBBBB....',
+      '..BBBBBB....',
+      '.BSSSSSSB...',
+      '.BSSEESSB...',
+      '..SSSSSS....',
+      '..SSMMSS....',
+      '...CCCC.....',
+      '..CCCCCC....',
+      '..CSCCSC....',
+      '..CSCCSC....',
+      '..CCCCCC....',
+      '..SCCCCS....',
+      '...IIII.....',
+      '...IIII.....',
+      '...IIII.....',
+      '...I..I.....',
+      '...I..I.....',
+      '..DD..DD....',
+      '..DD..DD....',
+    ],
+    colors: { B:'#5C3A1A', S:'#D4A574', E:'#3B2A14', M:'#B0785A', C:'#3A7ACA', I:'#2A2A6A', D:'#4a3a1a' }
+  },
+  don: { // White wolf, horizontal
+    width: 18, height: 12,
+    pixels: [
+      '..................',
+      '..WW........WW....',
+      '..WWW......WWW....',
+      '...WWWWWWWWWW.....',
+      '...WEEWWWEEW......',
+      '...WWWWWWWWW......',
+      '....WWNWWW........',
+      '...RRRRRRRRRR.....',
+      '..WWWWWWWWWWWWW...',
+      '..WWWWWWWWWWWWWW..',
+      '..W..WWWWWWW..WW..',
+      '..W..W.....W..W...',
+    ],
+    colors: { W:'#F0F0F0', E:'#2a2a2a', N:'#555', R:'#CC3333' }
+  }
+};
+
+function drawSprite(canvasId, spriteName, scale) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const sprite = SPRITES[spriteName];
+  const s = scale || 3;
+  canvas.width = sprite.width * s;
+  canvas.height = sprite.height * s;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  sprite.pixels.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const c = row[x];
+      if (c !== '.' && sprite.colors[c]) {
+        ctx.fillStyle = sprite.colors[c];
+        ctx.fillRect(x * s, y * s, s, s);
+      }
+    }
+  });
+}
+
+// ===== GRASS BLOCKS =====
+function buildGrass() {
+  const row = document.getElementById('grassRow');
+  for (let i = 0; i < 30; i++) {
+    const b = document.createElement('div');
+    b.className = 'grass-block';
+    row.appendChild(b);
+  }
+}
+
+// ===== CHARACTER DISPLAY =====
+function buildCharacters() {
+  const container = document.getElementById('characters');
+  container.innerHTML = `
+    <div class="char-container" id="charYuuki">
+      <div class="speech" id="speechYuuki"></div>
+      <div class="char-name">ユウキ</div>
+      <canvas class="char-sprite" id="canvasYuuki"></canvas>
+    </div>
+    <div class="char-container" id="charDon">
+      <div class="speech" id="speechDon"></div>
+      <div class="char-name">ドン</div>
+      <canvas class="char-sprite" id="canvasDon"></canvas>
+    </div>
+    <div class="char-container" id="charKent">
+      <div class="speech" id="speechKent"></div>
+      <div class="char-name">ケント</div>
+      <canvas class="char-sprite" id="canvasKent"></canvas>
+    </div>
+  `;
+  drawSprite('canvasYuuki', 'yuuki', 3);
+  drawSprite('canvasDon', 'don', 3);
+  drawSprite('canvasKent', 'kent', 3);
+}
+
+function showSpeech(charId, text, duration) {
+  const el = document.getElementById('speech' + charId);
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration || 2500);
+}
+
+// ===== QUIZ DATA =====
+const sections = [
+  {
+    title: 'プロローグ①「ユウキの家」',
+    text: '　ユウキが白樺の木材を置いたのは、もう何度目だろうと思いながらだった。\n　棚の位置が、どうしても気に入らない。左に一マス。いや、やっぱり右に——結局、また壊して、また置き直す。\n　窓から光が差し込んで、ガラスの花瓶に当たってきらきら光った。それを見てユウキは、まあいいか、と思った。光がきれいなら、棚の位置より大事なことだ。\n　この家を建てるのに、三週間かかった。最初に骨組みを作って、屋根を白樺のハーフブロックにして、窓を大きくとって、内側の壁に飾り物を並べて——ケントには「そんなに時間かけてどうするの」と言われたけれど、どうも何も、家というのは自分が気持ちよくいられる場所でないと意味がない。',
+    questions: [
+      {
+        q: 'ユウキの家を建てるのに、どのくらいかかりましたか？',
+        choices: ['三日', '一週間', '三週間', '三ヶ月'],
+        answer: 2,
+        explanation: '「この家を建てるのに、三週間かかった」と書かれています。'
+      },
+      {
+        q: 'ユウキが棚の位置を何度もやり直していたのに「まあいいか」と思えたのはなぜですか？',
+        choices: [
+          'ケントに早くしろと言われたから',
+          '窓からの光がきれいだったから',
+          '棚を置く場所がなくなったから',
+          '疲れてどうでもよくなったから'
+        ],
+        answer: 1,
+        explanation: '「光がきれいなら、棚の位置より大事なことだ」とあるように、窓からの光の美しさに気持ちが満たされたからです。'
+      }
+    ]
+  },
+  {
+    title: 'プロローグ②「ケント登場」',
+    text: '　壁には、これまでの探索で集めたものが飾ってある。ジャングルで見つけたオウムの羽、メサバイオームの赤い砂岩、深海で拾ったプリズマリンの破片。旅の記録みたいなものだ。\n　そう考えていたとき、玄関の扉が開いた。\n「ユウキ、地下使うよ」\n　ケントだった。肩にレッドストーンのブロックを山積みにして、当然のように中に入ってくる。\n「また？」とユウキは言った。「前回爆発したじゃない」\n「あれは計算ミス。今回は完ぺき」\n「同じこと前も言ってた」\n「今度こそ完ぺき」\n　ケントはもう靴を脱いで地下への梯子を降り始めている。止めても無駄だということはわかっていた。ケントは一度やると決めたら止まらない。それがうまくいくときは頼もしくて、うまくいかないときは——だいたい何かが爆発する。',
+    questions: [
+      {
+        q: 'ケントが肩に山積みにして持ってきたものは何ですか？',
+        choices: ['ダイヤモンドブロック', 'レッドストーンのブロック', '白樺の木材', 'TNT'],
+        answer: 1,
+        explanation: '「肩にレッドストーンのブロックを山積みにして」と書かれています。'
+      },
+      {
+        q: '「止めても無駄だということはわかっていた」という文から、ユウキとケントはどんな関係だと考えられますか？',
+        choices: [
+          '昨日はじめて会ったばかりの関係',
+          'ユウキがケントを怖がっている関係',
+          '長い付き合いで、お互いの性格をよく知っている関係',
+          'ケントがユウキの言うことを何でも聞く関係'
+        ],
+        answer: 2,
+        explanation: 'ケントの行動パターン（止まらない、爆発する）をユウキが予測できているので、長い付き合いであることがわかります。'
+      }
+    ]
+  },
+  {
+    title: 'プロローグ③「骨の予感」',
+    text: '　ドンに出会ったのは、その日の午後のことだ。\n　ケントが「新しい森を見つけた、一緒に来て」と言った。珍しいことに地下の実験を早々に切り上げて——後で聞いたら小さな爆発が一回あったらしい——外に出てきた。\n「どのくらい遠い？」\n「走って五分くらい」\n　ユウキはなんとなく、骨を一本ポケットに入れた。なぜかはわからなかった。ただ、持っていきたい気がした。\n「何それ」とケントが言った。\n「ドン用」\n「ドンってだれ」\n「……わからない」とユウキは言った。「でも、持っていったほうがいい気がする」\n　ケントは何も言わなかった。ユウキがときどき意味のわからないことを言うのは、もう慣れていた。',
+    questions: [
+      {
+        q: 'ユウキが森に行くとき、ポケットに入れたものは何ですか？',
+        choices: ['パン', '骨', '剣', 'レッドストーン'],
+        answer: 1,
+        explanation: '「骨を一本ポケットに入れた」と書かれています。'
+      },
+      {
+        q: 'ユウキはまだ出会っていない「ドン」の名前を知っていました。ユウキはどんなタイプの子だと考えられますか？',
+        choices: [
+          '計画をしっかり立ててから動くタイプ',
+          '理由はわからなくても、直感で動くタイプ',
+          'ケントに言われたことをそのままやるタイプ',
+          '未来が見える超能力を持っているタイプ'
+        ],
+        answer: 1,
+        explanation: '「なぜかはわからなかった」「持っていったほうがいい気がした」「わからない」と、理由は説明できないけれど感覚で行動しています。'
+      }
+    ]
+  },
+  {
+    title: 'プロローグ④「ドンとの出会い」',
+    text: '　オオカミの声が聞こえたのは、太い木の陰に差し掛かったときだった。低い、小さな唸り声。ケントが剣に手をかけるより先に、ユウキはしゃがんでいた。\n　木の根元に、白いオオカミがいた。まだ子供で、足元がおぼつかない感じがある。群れからはぐれたのか、一匹でそこにいた。\n　ユウキはポケットから骨を取り出した。持ってきておいてよかった、と思いながら、手を前に伸ばして、じっと待った。オオカミはしばらく唸っていた。でも、少しずつ近づいてきた。鼻を近づけて、においを嗅いで、ゆっくりと骨を咥えた。\n　オオカミの首に、赤い首輪が現れた瞬間、ユウキの胸が温かくなった。\n「ドン」とユウキは言った。「よろしくね」\n「なんでドンなの」とケントが後ろから言った。\n「強そうだから」\n「……全然強そうじゃないけど」\n　ケントの声が少し笑っていた。',
+    questions: [
+      {
+        q: 'ユウキが「ドン」と名づけた理由は何ですか？',
+        choices: [
+          '前から決めていた名前だから',
+          '白い色をしているから',
+          '強そうだから',
+          'ケントが提案したから'
+        ],
+        answer: 2,
+        explanation: '「なんでドンなの」と聞かれて「強そうだから」と答えています。'
+      },
+      {
+        q: 'ケントは「全然強そうじゃないけど」と言いながら、ドンの頭を撫でていました。ケントの気持ちはどれに近いですか？',
+        choices: [
+          'ドンが怖くて確認している',
+          '口ではからかいつつ、本当はドンを気に入っている',
+          'ユウキに頼まれたから仕方なく触っている',
+          'ドンを追い払おうとしている'
+        ],
+        answer: 1,
+        explanation: '否定的な言葉を言いつつも撫でていて、「声が少し笑っていた」「照れているのか、ユウキのほうを見ていなかった」と、素直になれない優しさが表れています。'
+      }
+    ]
+  },
+  {
+    title: 'プロローグ⑤「穏やかな日々」',
+    text: '　それからの日々は、穏やかだった。\n　朝、ユウキが起きるとドンは玄関の前で待っている。探索に出かけるとき、ドンは必ず先を歩く。帰ってくると、ユウキの足元にくっついて離れない。\n　ケントが作った自動ドアに、ドンがはまった。感知センサーの前を行ったり来たりして、開いては閉まる扉を何度も通り抜ける。その様子をケントは「やめてよ、扉がこわれる」と言いながら、結局30分も眺めていた。\n　夜はドンがユウキのベッドの下で眠る。時々夢を見るのか、寝ながら小さく唸ることがある。そういうとき、ユウキは手を伸ばして頭を撫でると、ドンはまたすうっと静かになった。\n　ケントとユウキとドン。このワールドで、三人はいつも一緒だった。\n　——あの日まで。',
+    questions: [
+      {
+        q: 'ドンが夜に眠る場所はどこですか？',
+        choices: ['玄関の前', 'ケントの部屋', 'ユウキのベッドの下', '外の犬小屋'],
+        answer: 2,
+        explanation: '「夜はドンがユウキのベッドの下で眠る」と書かれています。'
+      },
+      {
+        q: '最後の「——あの日まで。」という一文には、どんな役割がありますか？',
+        choices: [
+          '物語がここで終わることを伝えている',
+          '穏やかな日々がずっと続くことを強調している',
+          'この先に何か大きな出来事が起きることを予感させている',
+          '三人が別のワールドに引っ越したことを示している'
+        ],
+        answer: 2,
+        explanation: '幸せな日常を描いた後に「——あの日まで。」と書くことで、読者に「何が起きたんだろう？」と先を読みたくさせる効果（伏線・予告）があります。'
+      }
+    ]
+  },
+  {
+    title: '第一章①「知らない景色」',
+    text: '　その日は、特別な予定があったわけじゃない。ケントが「地図の端っこまで行ってみたい」と言ったから、ユウキはドンを連れて出かけた。お昼前に出て、夕方には帰れるだろうと思っていた。\n　最初の一時間は、よく知っている道だった。草原を抜けて、川を渡って、白樺の森を通り過ぎる。ドンが先を走って、時々振り返って、こっちだよというように尾を振る。\n　二時間目あたりで、道がなくなった。正確には、知っている景色がなくなった。木の種類が変わって、アカシアでも白樺でもない、見たことのない色の幹が続いている。地面の草が、少し青みがかっている気がする。',
+    questions: [
+      {
+        q: 'ケントが行きたいと言った場所はどこですか？',
+        choices: ['ジャングル', '地図の端っこ', '深海', 'ネザー'],
+        answer: 1,
+        explanation: '「地図の端っこまで行ってみたい」とケントが言いました。'
+      },
+      {
+        q: '「道がなくなった」と書いてありますが、実際に起きたことはどれですか？',
+        choices: [
+          '道路が壊されていた',
+          '地図を失くして迷子になった',
+          '見たことのある景色がなくなり、未知の場所に入った',
+          'ドンが道を間違えて別の方向に進んだ'
+        ],
+        answer: 2,
+        explanation: '「正確には、知っている景色がなくなった」と説明されているように、物理的な道ではなく「見覚えのある風景」がなくなったということです。'
+      }
+    ]
+  },
+  {
+    title: '第一章②「ドンがいない」',
+    text: '「空、なんか変じゃない？」\n　ケントが上を向いた。空は青かった。でも、ふつうの青じゃない。少し濁った、水底みたいな青だった。\n「バイオームが変わったんだと思う」とケントは言った。\n　そのときユウキは気づいた。\n「ドンがいない」\n　二人で来た道を振り返った。どこにも白い毛並みは見えない。\n「ドン！」ユウキは呼んだ。声が、森に吸い込まれていくみたいだった。エコーが返ってこない。鳥の声もない。風の音もない。しんと、静かだった。\n「落ち着いて」とケントが言った。「テイムしてるんだから、遠くには行かないはずだよ。戻ってくる」\n　でも。この森には、音がなかった。モブが出るはずの夕暮れが近づいているのに、どこからもスポーンの気配がない。葉が揺れない。水の音がしない。まるでこの場所だけが、ゲームの外側にあるみたいな静けさだった。',
+    questions: [
+      {
+        q: 'この不思議なバイオームの空はどんな色でしたか？',
+        choices: [
+          '真っ赤な夕焼け色',
+          '少し濁った、水底みたいな青',
+          '真っ黒で星が見える',
+          'ふつうの明るい青'
+        ],
+        answer: 1,
+        explanation: '「ふつうの青じゃない。少し濁った、水底みたいな青だった」と書かれています。'
+      },
+      {
+        q: 'この森に「音がない」ことは、どんなことを読者に伝えていますか？',
+        choices: [
+          '夜が近くて動物が寝ているだけ',
+          'ゲームの音量設定がオフになっている',
+          'この場所が普通のゲーム世界とは違う、異常な場所であること',
+          'ユウキの耳が聞こえなくなっていること'
+        ],
+        answer: 2,
+        explanation: '「まるでこの場所だけが、ゲームの外側にあるみたいな静けさ」という表現から、ここが普通ではない不気味な場所であることが強調されています。'
+      }
+    ]
+  }
+];
+
+// ===== SAVE / LOAD =====
+const SAVE_KEY = 'yamaneko_quiz_save';
+let storageOK = false;
+try { localStorage.setItem('_test','1'); localStorage.removeItem('_test'); storageOK = true; } catch(e) {}
+
+function saveProgress() {
+  if (!storageOK) return;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      section: currentSection, question: currentQuestion,
+      score: score, phase: phase, answers: answers, v: 2
+    }));
+  } catch(e) {}
+}
+function loadProgress() {
+  if (!storageOK) return null;
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (d && (d.v === 1 || d.v === 2) && d.section < sections.length) return d;
+  } catch(e) {}
+  return null;
+}
+function clearProgress() {
+  if (!storageOK) return;
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+}
+
+// ===== GAME STATE =====
+let currentSection = 0;
+let currentQuestion = 0;
+let score = 0;
+let totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);
+let phase = 'title'; // title, reading, quiz, result, final
+
+// 回答済み記録: answers[sectionIdx][questionIdx] = { chosen, correct }
+let answers = sections.map(s => s.questions.map(() => null));
+
+// ===== RENDER FUNCTIONS =====
+function render() {
+  const content = document.getElementById('content');
+  switch (phase) {
+    case 'title': renderTitle(content); break;
+    case 'reading': renderReading(content); break;
+    case 'quiz': renderQuiz(content); break;
+    case 'result': renderResult(content); break;
+    case 'final': renderFinal(content); break;
+  }
+}
+
+function renderTitle(el) {
+  const saved = loadProgress();
+  const resumeBtn = saved && saved.phase !== 'title' && saved.phase !== 'final'
+    ? `<button class="mc-btn" onclick="resumeGame()" style="margin-bottom:10px">つづきから（${sections[saved.section].title}）</button>`
+    : '';
+  el.innerHTML = `
+    <div class="title-screen">
+      <h1>🐾 やまねこ亭</h1>
+      <div class="subtitle">〜 国語クイズ 〜</div>
+      <p style="font-size:13px; color:#6b5a3a; margin-bottom:6px;">
+        「謎のマイクラレストラン」を読んで<br>クイズに答えよう！
+      </p>
+      <p style="font-size:12px; color:#8a7a5a; margin-bottom:20px;">
+        プロローグ 〜 第一章<br>
+        全${sections.length}パート・${totalQuestions}問
+      </p>
+      ${resumeBtn}
+      <button class="mc-btn ${resumeBtn ? 'gray' : ''}" onclick="startGame()">はじめから</button>
+    </div>
+  `;
+  setTimeout(() => showSpeech('Yuuki', 'がんばろう！', 2500), 500);
+  setTimeout(() => showSpeech('Kent', '完ぺき！', 2500), 1200);
+}
+
+function renderReading(el) {
+  const sec = sections[currentSection];
+  const progress = currentSection / sections.length * 100;
+  el.innerHTML = `
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="score-display">スコア: <span class="num">${score}</span> / ${totalQuestions}</div>
+    <div class="story-header">${sec.title}</div>
+    <div class="story-text">${sec.text.replace(/\n/g, '<br>')}</div>
+    <button class="mc-btn" onclick="goToQuiz()">問題へすすむ →</button>
+  `;
+}
+
+function renderQuiz(el) {
+  const sec = sections[currentSection];
+  const q = sec.questions[currentQuestion];
+  const progress = (currentSection + (currentQuestion + 1) / sec.questions.length) / sections.length * 100;
+  const qNum = sections.slice(0, currentSection).reduce((s, sec) => s + sec.questions.length, 0) + currentQuestion + 1;
+  const prev = answers[currentSection][currentQuestion];
+
+  // 回答済みなら選択肢をロック状態で表示
+  const choicesHtml = q.choices.map((c, i) => {
+    let cls = 'choice-btn';
+    let disabled = '';
+    if (prev) {
+      disabled = 'disabled';
+      if (i === q.answer) cls += ' correct';
+      if (i === prev.chosen && !prev.correct) cls += ' wrong';
+    }
+    return `<button class="${cls}" onclick="selectAnswer(${i})" id="choice${i}" ${disabled}>${['A','B','C','D'][i]}. ${c}</button>`;
+  }).join('');
+
+  const feedbackHtml = prev
+    ? (prev.correct
+        ? `<div class="result-box correct">⭕ 正解！<br>${q.explanation}</div><button class="mc-btn" onclick="nextStep()" style="margin-top:6px">つぎへ →</button>`
+        : `<div class="result-box wrong">❌ ざんねん…<br>正解は「${q.choices[q.answer]}」<br>${q.explanation}</div><button class="mc-btn" onclick="nextStep()" style="margin-top:6px">つぎへ →</button>`)
+    : '';
+
+  // iPad横向き: 左に本文、右にクイズ
+  const storyHtml = `<div class="ql-story">${sec.text.replace(/\n/g, '<br>')}</div>`;
+  const quizRight = `
+    <div class="ql-right">
+      <div class="quiz-header">問${qNum} / ${totalQuestions}（${sec.title}）</div>
+      <div class="quiz-question">${q.q}</div>
+      <div id="choices">${choicesHtml}</div>
+      <div id="feedback">${feedbackHtml}</div>
+      <button class="mc-btn reread-btn" onclick="goBackToReading()">📖 もういちど読む</button>
+    </div>
+  `;
+
+  el.innerHTML = `
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="score-display">スコア: <span class="num">${score}</span> / ${totalQuestions}</div>
+    <div class="quiz-landscape">
+      ${storyHtml}
+      ${quizRight}
+    </div>
+  `;
+}
+
+function selectAnswer(idx) {
+  // 回答済みなら何もしない
+  if (answers[currentSection][currentQuestion]) return;
+
+  const sec = sections[currentSection];
+  const q = sec.questions[currentQuestion];
+  const correct = idx === q.answer;
+
+  if (correct) score++;
+
+  // 回答を記録
+  answers[currentSection][currentQuestion] = { chosen: idx, correct: correct };
+
+  // 再描画で回答済み状態を表示
+  render();
+
+  if (correct) {
+    showSpeech('Yuuki', 'すごい！', 2000);
+  } else {
+    showSpeech('Kent', 'ドンマイ！', 2000);
+  }
+}
+
+function nextStep() {
+  const sec = sections[currentSection];
+  currentQuestion++;
+  if (currentQuestion >= sec.questions.length) {
+    currentQuestion = 0;
+    currentSection++;
+    if (currentSection >= sections.length) {
+      phase = 'final';
+      clearProgress();
+    } else {
+      phase = 'reading';
+    }
+  } else {
+    phase = 'quiz';
+  }
+  saveProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function renderFinal(el) {
+  const pct = Math.round(score / totalQuestions * 100);
+  let stars, msg;
+  if (pct >= 90) { stars = '⭐⭐⭐'; msg = 'すばらしい！完ぺき！'; }
+  else if (pct >= 70) { stars = '⭐⭐'; msg = 'よくできました！'; }
+  else if (pct >= 50) { stars = '⭐'; msg = 'もう少しがんばろう！'; }
+  else { stars = ''; msg = 'もう一度読んでみよう！'; }
+
+  el.innerHTML = `
+    <div class="final-score">
+      <h2>🏆 けっか発表 🏆</h2>
+      <div class="stars">${stars}</div>
+      <div class="big-score">${score} <span>/ ${totalQuestions}</span></div>
+      <p style="font-size:16px; color:#3b2a14; margin:16px 0;">${msg}</p>
+      <p style="font-size:13px; color:#6b5a3a; margin-bottom:20px;">正答率 ${pct}%</p>
+      <button class="mc-btn" onclick="resetGame()">もう一度あそぶ</button>
+    </div>
+  `;
+
+  if (pct >= 70) {
+    showSpeech('Yuuki', 'やったね！', 3000);
+    showSpeech('Don', 'ワン！', 3000);
+  } else {
+    showSpeech('Kent', 'もう一回！', 3000);
+  }
+}
+
+// ===== GAME CONTROL =====
+function startGame() {
+  currentSection = 0;
+  currentQuestion = 0;
+  score = 0;
+  answers = sections.map(s => s.questions.map(() => null));
+  phase = 'reading';
+  saveProgress();
+  render();
+}
+
+function resumeGame() {
+  const d = loadProgress();
+  if (!d) { startGame(); return; }
+  currentSection = d.section;
+  currentQuestion = d.question;
+  score = d.score;
+  phase = d.phase;
+  if (d.answers) answers = d.answers;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goToQuiz() {
+  currentQuestion = 0;
+  phase = 'quiz';
+  saveProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goBackToReading() {
+  phase = 'reading';
+  render();
+  window.scrollTo(0, 0);
+}
+
+function resetGame() {
+  currentSection = 0;
+  currentQuestion = 0;
+  score = 0;
+  phase = 'title';
+  clearProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+// ===== INIT =====
+try {
+  buildGrass();
+  buildCharacters();
+  render();
+} catch(e) {
+  document.getElementById('content').innerHTML =
+    '<div style="padding:20px;color:red;font-size:16px;">エラー: ' + e.message + '</div>';
+}
+// グローバルエラーキャッチ
+window.onerror = function(msg, url, line) {
+  var el = document.getElementById('content');
+  if (el) el.innerHTML = '<div style="padding:20px;color:red;font-size:16px;">エラー(L' + line + '): ' + msg + '</div>';
+};
+</script>
+</body>
+</html>
