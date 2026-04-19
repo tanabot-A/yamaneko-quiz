@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふりがな デモ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'DotGothic16', 'Hiragino Kaku Gothic ProN', sans-serif;
+    background: #f5e6c8;
+    color: #3b2a14;
+    margin: 0;
+    padding: 16px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 22px; text-align: center; margin: 12px 0 20px; }
+  h2 {
+    font-size: 18px;
+    margin: 24px 0 8px;
+    padding: 8px 12px;
+    background: #8B6914;
+    color: #fff;
+    border-radius: 4px;
+  }
+  .desc {
+    font-size: 13px;
+    color: #6b5a3a;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+  .story {
+    font-size: 20px; /* 30%アップ後の想定サイズ */
+    line-height: 2.0;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.6);
+    border: 2px solid #cdb98a;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+
+  /* === パターンA: 常時ふりがな（ruby）=== */
+  .pattern-a ruby rt {
+    font-size: 0.5em;
+    color: #8a5a10;
+    font-family: sans-serif;
+  }
+
+  /* === パターンB: タップでポップアップ === */
+  .pattern-b .kanji-pop {
+    color: #2a6a1a;
+    border-bottom: 2px dotted #5d8c3e;
+    cursor: pointer;
+    position: relative;
+    padding: 0 1px;
+  }
+  .pattern-b .kanji-pop.active {
+    background: #fff3d0;
+    border-radius: 3px;
+  }
+  .pattern-b .kanji-pop.active::after {
+    content: attr(data-yomi);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #3b2a14;
+    color: #fff;
+    padding: 4px 10px;
+    font-size: 14px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 10;
+    margin-bottom: 4px;
+    font-family: sans-serif;
+  }
+  .pattern-b .kanji-pop.active::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #3b2a14;
+    z-index: 10;
+  }
+
+  /* === パターンC: トグル切替 === */
+  .toggle-btn {
+    display: inline-block;
+    padding: 8px 18px;
+    background: #4a8a2a;
+    color: #fff;
+    border: 2px solid #2d5a0e;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .toggle-btn:active { transform: translateY(1px); }
+  .pattern-c.furigana-off ruby rt { display: none; }
+  .pattern-c ruby rt {
+    font-size: 0.5em;
+    color: #8a5a10;
+    font-family: sans-serif;
+  }
+
+  /* === 比較: ふりがな無し === */
+  .pattern-0 { color: #3b2a14; }
+
+  .note {
+    font-size: 12px;
+    color: #8a7a5a;
+    text-align: center;
+    padding: 16px;
+    border-top: 1px solid #cdb98a;
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+<h1>🐾 ふりがな表示デモ</h1>
+<p style="font-size:13px; text-align:center; color:#6b5a3a;">
+見やすい方を教えてください。本文のサイズは30％アップ済みの想定です。
+</p>
+
+<!-- 比較用: ふりがな無し -->
+<h2>① 今のまま（ふりがな無し）</h2>
+<p class="desc">比較用。漢字が読めないと止まる。</p>
+<div class="story pattern-0">
+　ユウキが白樺の木材を置いたのは、もう何度目だろうと思いながらだった。棚の位置が、どうしても気に入らない。左に一マス。いや、やっぱり右に——結局、また壊して、また置き直す。窓から光が差し込んで、ガラスの花瓶に当たってきらきら光った。
+</div>
+
+<!-- パターンA: 常時表示 -->
+<h2>② 常にふりがな（ルビ）</h2>
+<p class="desc">漢字の上に小さくふりがなが出る。何もしなくていい。電車でもOK。</p>
+<div class="story pattern-a">
+　ユウキが<ruby>白樺<rt>しらかば</rt></ruby>の<ruby>木材<rt>もくざい</rt></ruby>を<ruby>置<rt>お</rt></ruby>いたのは、もう<ruby>何度目<rt>なんどめ</rt></ruby>だろうと<ruby>思<rt>おも</rt></ruby>いながらだった。<ruby>棚<rt>たな</rt></ruby>の<ruby>位置<rt>いち</rt></ruby>が、どうしても<ruby>気<rt>き</rt></ruby>に<ruby>入<rt>い</rt></ruby>らない。<ruby>左<rt>ひだり</rt></ruby>に<ruby>一<rt>いち</rt></ruby>マス。いや、やっぱり<ruby>右<rt>みぎ</rt></ruby>に——<ruby>結局<rt>けっきょく</rt></ruby>、また<ruby>壊<rt>こわ</rt></ruby>して、また<ruby>置<rt>お</rt></ruby>き<ruby>直<rt>なお</rt></ruby>す。<ruby>窓<rt>まど</rt></ruby>から<ruby>光<rt>ひかり</rt></ruby>が<ruby>差<rt>さ</rt></ruby>し<ruby>込<rt>こ</rt></ruby>んで、ガラスの<ruby>花瓶<rt>かびん</rt></ruby>に<ruby>当<rt>あ</rt></ruby>たってきらきら<ruby>光<rt>ひか</rt></ruby>った。
+</div>
+
+<!-- パターンA': 難しい漢字だけ -->
+<h2>③ 難しい漢字だけふりがな</h2>
+<p class="desc">小4までの漢字はそのまま。それ以外だけにふりがな。読書として自然。</p>
+<div class="story pattern-a">
+　ユウキが<ruby>白樺<rt>しらかば</rt></ruby>の木材を置いたのは、もう何度目だろうと思いながらだった。<ruby>棚<rt>たな</rt></ruby>の位置が、どうしても気に入らない。左に一マス。いや、やっぱり右に——結局、また<ruby>壊<rt>こわ</rt></ruby>して、また置き直す。<ruby>窓<rt>まど</rt></ruby>から光が差し込んで、ガラスの<ruby>花瓶<rt>かびん</rt></ruby>に当たってきらきら光った。
+</div>
+
+<!-- パターンB: タップでポップアップ -->
+<h2>④ タップするとふりがな（ポップアップ）</h2>
+<p class="desc">緑の下線がついた漢字をタップすると読みが出る。ふだんはスッキリ。</p>
+<div class="story pattern-b">
+　ユウキが<span class="kanji-pop" data-yomi="しらかば">白樺</span>の木材を置いたのは、もう何度目だろうと思いながらだった。<span class="kanji-pop" data-yomi="たな">棚</span>の位置が、どうしても気に入らない。左に一マス。いや、やっぱり右に——結局、また<span class="kanji-pop" data-yomi="こわ">壊</span>して、また置き直す。<span class="kanji-pop" data-yomi="まど">窓</span>から光が差し込んで、ガラスの<span class="kanji-pop" data-yomi="かびん">花瓶</span>に当たってきらきら光った。
+</div>
+
+<!-- パターンC: トグル -->
+<h2>⑤ ボタンでON/OFF切替</h2>
+<p class="desc">必要なときだけふりがなを出せる。学年に応じて切替可。</p>
+<button class="toggle-btn" onclick="toggleFurigana()">ふりがな ON / OFF</button>
+<div class="story pattern-c furigana-off" id="patternC">
+　ユウキが<ruby>白樺<rt>しらかば</rt></ruby>の木材を置いたのは、もう何度目だろうと思いながらだった。<ruby>棚<rt>たな</rt></ruby>の位置が、どうしても気に入らない。左に一マス。いや、やっぱり右に——結局、また<ruby>壊<rt>こわ</rt></ruby>して、また置き直す。<ruby>窓<rt>まど</rt></ruby>から光が差し込んで、ガラスの<ruby>花瓶<rt>かびん</rt></ruby>に当たってきらきら光った。
+</div>
+
+<div class="note">
+どの見た目が好みか教えてください。<br>
+④のポップアップ＋⑤のトグル切替、という合わせ技も可能です。
+</div>
+
+<script>
+// パターンB: タップで読みを表示
+document.querySelectorAll('.kanji-pop').forEach(el => {
+  el.addEventListener('click', e => {
+    const isActive = el.classList.contains('active');
+    document.querySelectorAll('.kanji-pop.active').forEach(a => a.classList.remove('active'));
+    if (!isActive) el.classList.add('active');
+    e.stopPropagation();
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.kanji-pop.active').forEach(a => a.classList.remove('active'));
+});
+
+// パターンC: トグル
+function toggleFurigana() {
+  const el = document.getElementById('patternC');
+  el.classList.toggle('furigana-off');
+}
+</script>
+</body>
+</html>
