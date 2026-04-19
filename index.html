@@ -327,6 +327,79 @@
     border-top: 7px solid #3b2a14;
   }
 
+  /* === 過去に間違えた選択肢 === */
+  .choice-btn.past-wrong {
+    background: linear-gradient(180deg, #d8cbb5, #c0b092) !important;
+    color: #999 !important;
+    border-color: #a89878 !important;
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  /* === ログ表示 === */
+  .log-summary-box {
+    background: rgba(255,255,255,0.7);
+    border: 2px solid #cdb98a;
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin: 14px auto;
+    max-width: 360px;
+    text-align: left;
+    font-size: 14px;
+    color: #3b2a14;
+  }
+  .log-summary-box h3 { font-size: 16px; margin-bottom: 8px; color: #6b5a3a; }
+  .log-summary-box .log-row { margin: 4px 0; line-height: 1.7; }
+  .log-details {
+    max-width: 420px;
+    margin: 10px auto;
+    text-align: left;
+    font-size: 13px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid #cdb98a;
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: #3b2a14;
+  }
+  .log-details summary {
+    cursor: pointer;
+    padding: 6px 0;
+    font-weight: bold;
+    color: #6b5a3a;
+    font-size: 14px;
+  }
+  .log-section {
+    padding: 8px 0;
+    border-bottom: 1px dashed #cdb98a;
+  }
+  .log-section:last-child { border-bottom: none; }
+  .log-title {
+    font-weight: bold;
+    color: #8B6914;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+  .log-section .log-row {
+    font-size: 12px;
+    color: #6b5a3a;
+    margin: 2px 0;
+  }
+  .log-wrong-item {
+    background: #f5d0d0;
+    padding: 5px 7px;
+    border-radius: 3px;
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .log-q { color: #6a1a1a; font-weight: bold; }
+  .log-a { color: #9a3a3a; margin-top: 2px; }
+  .log-ok-item {
+    color: #2a6a1a;
+    font-size: 12px;
+    margin: 4px 0;
+  }
+
   /* === iPad 横向き (幅768px以上) === */
   @media (min-width: 768px) {
     #app {
@@ -1077,15 +1150,28 @@ const sections = [
 
 // ===== SAVE / LOAD =====
 const SAVE_KEY = 'yamaneko_quiz_save';
+const LOG_KEY = 'yamaneko_quiz_log_latest';
 let storageOK = false;
 try { localStorage.setItem('_test','1'); localStorage.removeItem('_test'); storageOK = true; } catch(e) {}
 
+function flushReadingTimer() {
+  if (readingStartTime === null) return;
+  const now = Date.now();
+  const elapsed = Math.floor((now - readingStartTime) / 1000);
+  if (log.sections[currentSection]) {
+    log.sections[currentSection].readingSeconds += elapsed;
+  }
+  readingStartTime = now;
+}
+
 function saveProgress() {
   if (!storageOK) return;
+  if (phase === 'reading') flushReadingTimer();
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       section: currentSection, question: currentQuestion,
-      score: score, phase: phase, answers: answers, v: 2
+      score: score, phase: phase,
+      answers: answers, log: log, v: 3
     }));
   } catch(e) {}
 }
@@ -1093,7 +1179,7 @@ function loadProgress() {
   if (!storageOK) return null;
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (d && (d.v === 1 || d.v === 2) && d.section < sections.length) return d;
+    if (d && d.v === 3 && d.section < sections.length) return d;
   } catch(e) {}
   return null;
 }
@@ -1101,25 +1187,76 @@ function clearProgress() {
   if (!storageOK) return;
   try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
 }
+function saveLogArchive() {
+  if (!storageOK) return;
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch(e) {}
+}
 
 // ===== GAME STATE =====
 let currentSection = 0;
 let currentQuestion = 0;
-let score = 0;
+let score = 0; // 1回で正解した問題数
 let totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);
-let phase = 'title'; // title, reading, quiz, result, final
+let phase = 'title';
 
-// 回答済み記録: answers[sectionIdx][questionIdx] = { chosen, correct }
-let answers = sections.map(s => s.questions.map(() => null));
+// answers[sec][q] = { wrongChoices: [2,1], locked: false }
+function makeFreshAnswers() {
+  return sections.map(s => s.questions.map(() => ({ wrongChoices: [], locked: false })));
+}
+let answers = makeFreshAnswers();
 
-// ===== RENDER FUNCTIONS =====
+// ===== LOG =====
+function makeFreshLog() {
+  return {
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    sections: sections.map(s => ({
+      title: s.title,
+      readingSeconds: 0,
+      rereadCount: 0,
+      questions: s.questions.map(q => ({
+        q: q.q,
+        wrongChoicesTexts: [],
+        attemptCount: 0,
+        firstTryCorrect: false
+      }))
+    }))
+  };
+}
+let log = makeFreshLog();
+
+// 読書タイマー
+let readingStartTime = null;
+function startReadingTimer() { readingStartTime = Date.now(); }
+function stopReadingTimer() {
+  if (readingStartTime === null) return;
+  const elapsed = Math.floor((Date.now() - readingStartTime) / 1000);
+  if (log.sections[currentSection]) {
+    log.sections[currentSection].readingSeconds += elapsed;
+  }
+  readingStartTime = null;
+}
+
+// 10秒ごとに読書中の時間をセーブ（中断対策）
+setInterval(() => {
+  if (phase === 'reading') saveProgress();
+}, 10000);
+
+// ページを離れるときもセーブ
+window.addEventListener('beforeunload', () => {
+  if (phase !== 'title' && phase !== 'final') saveProgress();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && phase !== 'title' && phase !== 'final') saveProgress();
+});
+
+// ===== RENDER =====
 function render() {
   const content = document.getElementById('content');
   switch (phase) {
     case 'title': renderTitle(content); break;
     case 'reading': renderReading(content); break;
     case 'quiz': renderQuiz(content); break;
-    case 'result': renderResult(content); break;
     case 'final': renderFinal(content); break;
   }
 }
@@ -1136,98 +1273,118 @@ function renderTitle(el) {
       <p style="font-size:13px; color:#6b5a3a; margin-bottom:6px;">
         「謎のマイクラレストラン」を読んで<br>クイズに答えよう！
       </p>
-      <p style="font-size:12px; color:#8a7a5a; margin-bottom:20px;">
+      <p style="font-size:12px; color:#8a7a5a; margin-bottom:12px;">
         プロローグ 〜 第五章（ぜんぶ）<br>
         全${sections.length}パート・${totalQuestions}問
+      </p>
+      <p style="font-size:11px; color:#8a7a5a; margin-bottom:16px; line-height:1.7;">
+        ★ クイズ中は本文は見られないよ<br>
+        ★ まちがえたら、もう一度読みなおし！<br>
+        ★ 正解するまで次へは進めません
       </p>
       ${resumeBtn}
       <button class="mc-btn ${resumeBtn ? 'gray' : ''}" onclick="startGame()">はじめから</button>
     </div>
   `;
   setTimeout(() => showSpeech('Yuuki', 'がんばろう！', 2500), 500);
-  setTimeout(() => showSpeech('Kent', '完ぺき！', 2500), 1200);
+  setTimeout(() => showSpeech('Kent', 'ちゃんと読んでね', 2500), 1200);
 }
 
 function renderReading(el) {
   const sec = sections[currentSection];
   const progress = currentSection / sections.length * 100;
+  const qIdx = currentQuestion;
+  const ans = answers[currentSection][qIdx];
+  const isRetry = ans && ans.wrongChoices.length > 0;
+  const hint = isRetry
+    ? '<div style="background:#fff3d0; border:2px solid #e0b020; padding:8px 10px; border-radius:4px; font-size:13px; color:#8a5a10; margin-bottom:8px;">🔍 もう一度じっくり読んで、答えをさがしてみよう！</div>'
+    : '';
   el.innerHTML = `
     <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
-    <div class="score-display">スコア: <span class="num">${score}</span> / ${totalQuestions}</div>
+    <div class="score-display">1回で正解: <span class="num">${score}</span> / ${totalQuestions}</div>
     <div class="story-header">${sec.title}</div>
+    ${hint}
     <div class="story-text">${sec.text.replace(/\n/g, '<br>')}</div>
-    <button class="mc-btn" onclick="goToQuiz()">問題へすすむ →</button>
+    <button class="mc-btn" onclick="goToQuiz()">${isRetry ? 'もう一度クイズに挑戦 →' : '問題へすすむ →'}</button>
   `;
+  startReadingTimer();
 }
 
 function renderQuiz(el) {
   const sec = sections[currentSection];
   const q = sec.questions[currentQuestion];
+  const ans = answers[currentSection][currentQuestion];
   const progress = (currentSection + (currentQuestion + 1) / sec.questions.length) / sections.length * 100;
   const qNum = sections.slice(0, currentSection).reduce((s, sec) => s + sec.questions.length, 0) + currentQuestion + 1;
-  const prev = answers[currentSection][currentQuestion];
 
-  // 回答済みなら選択肢をロック状態で表示
   const choicesHtml = q.choices.map((c, i) => {
     let cls = 'choice-btn';
     let disabled = '';
-    if (prev) {
+    if (ans.locked) {
       disabled = 'disabled';
       if (i === q.answer) cls += ' correct';
-      if (i === prev.chosen && !prev.correct) cls += ' wrong';
+    } else if (ans.wrongChoices.includes(i)) {
+      disabled = 'disabled';
+      cls += ' past-wrong';
     }
     return `<button class="${cls}" onclick="selectAnswer(${i})" id="choice${i}" ${disabled}>${['A','B','C','D'][i]}. ${c}</button>`;
   }).join('');
 
-  const feedbackHtml = prev
-    ? (prev.correct
-        ? `<div class="result-box correct">⭕ 正解！<br>${q.explanation}</div><button class="mc-btn" onclick="nextStep()" style="margin-top:6px">つぎへ →</button>`
-        : `<div class="result-box wrong">❌ ざんねん…<br>正解は「${q.choices[q.answer]}」<br>${q.explanation}</div><button class="mc-btn" onclick="nextStep()" style="margin-top:6px">つぎへ →</button>`)
-    : '';
+  let feedbackHtml = '';
+  if (ans.locked) {
+    feedbackHtml = `
+      <div class="result-box correct">⭕ 正解！<br>${q.explanation}</div>
+      <button class="mc-btn" onclick="nextStep()" style="margin-top:6px">つぎへ →</button>
+    `;
+  } else if (ans.wrongChoices.length > 0) {
+    feedbackHtml = `
+      <div class="result-box wrong">❌ ちがうよ…<br>もう一度お話を読んで、ヒントをさがそう！</div>
+      <button class="mc-btn reread-btn" onclick="goBackToReading()" style="margin-top:6px; font-size:15px; padding:12px 18px;">📖 もう一度読む</button>
+    `;
+  }
 
-  // iPad横向き: 左に本文、右にクイズ
-  const storyHtml = `<div class="ql-story">${sec.text.replace(/\n/g, '<br>')}</div>`;
-  const quizRight = `
-    <div class="ql-right">
-      <div class="quiz-header">問${qNum} / ${totalQuestions}（${sec.title}）</div>
-      <div class="quiz-question">${q.q}</div>
-      <div id="choices">${choicesHtml}</div>
-      <div id="feedback">${feedbackHtml}</div>
-      <button class="mc-btn reread-btn" onclick="goBackToReading()">📖 もういちど読む</button>
-    </div>
-  `;
+  // 未回答・未間違いなら「もう一度読む」も下に表示
+  const extraReread = (!ans.locked && ans.wrongChoices.length === 0)
+    ? '<button class="mc-btn reread-btn" onclick="goBackToReading()" style="margin-top:14px">📖 もう一度読む</button>'
+    : '';
 
   el.innerHTML = `
     <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
-    <div class="score-display">スコア: <span class="num">${score}</span> / ${totalQuestions}</div>
-    <div class="quiz-landscape">
-      ${storyHtml}
-      ${quizRight}
-    </div>
+    <div class="score-display">1回で正解: <span class="num">${score}</span> / ${totalQuestions}</div>
+    <div class="quiz-header">問${qNum} / ${totalQuestions}（${sec.title}）</div>
+    <div class="quiz-question">${q.q}</div>
+    <div id="choices">${choicesHtml}</div>
+    <div id="feedback">${feedbackHtml}</div>
+    ${extraReread}
   `;
 }
 
 function selectAnswer(idx) {
-  // 回答済みなら何もしない
-  if (answers[currentSection][currentQuestion]) return;
+  const ans = answers[currentSection][currentQuestion];
+  if (ans.locked) return;
+  if (ans.wrongChoices.includes(idx)) return;
 
   const sec = sections[currentSection];
   const q = sec.questions[currentQuestion];
   const correct = idx === q.answer;
-
-  if (correct) score++;
-
-  // 回答を記録
-  answers[currentSection][currentQuestion] = { chosen: idx, correct: correct };
-
-  // 再描画で回答済み状態を表示
-  render();
+  const logQ = log.sections[currentSection].questions[currentQuestion];
+  logQ.attemptCount++;
 
   if (correct) {
-    showSpeech('Yuuki', 'すごい！', 2000);
+    ans.locked = true;
+    if (logQ.attemptCount === 1) {
+      score++;
+      logQ.firstTryCorrect = true;
+    }
+    showSpeech('Yuuki', 'せいかい！', 2000);
   } else {
-    showSpeech('Kent', 'ドンマイ！', 2000);
+    ans.wrongChoices.push(idx);
+    logQ.wrongChoicesTexts.push(q.choices[idx]);
+    showSpeech('Kent', 'ちがうよ！', 2000);
   }
+
+  saveProgress();
+  render();
 }
 
 function nextStep() {
@@ -1238,6 +1395,8 @@ function nextStep() {
     currentSection++;
     if (currentSection >= sections.length) {
       phase = 'final';
+      log.completedAt = new Date().toISOString();
+      saveLogArchive();
       clearProgress();
     } else {
       phase = 'reading';
@@ -1250,31 +1409,138 @@ function nextStep() {
   window.scrollTo(0, 0);
 }
 
+function goBackToReading() {
+  if (log.sections[currentSection]) {
+    log.sections[currentSection].rereadCount++;
+  }
+  phase = 'reading';
+  saveProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goToQuiz() {
+  stopReadingTimer();
+  phase = 'quiz';
+  saveProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function formatTime(sec) {
+  if (sec < 60) return sec + '秒';
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s > 0 ? m + '分' + s + '秒' : m + '分';
+}
+
 function renderFinal(el) {
   const pct = Math.round(score / totalQuestions * 100);
   let stars, msg;
-  if (pct >= 90) { stars = '⭐⭐⭐'; msg = 'すばらしい！完ぺき！'; }
+  if (pct >= 90) { stars = '⭐⭐⭐'; msg = 'すばらしい！しっかり読めてる！'; }
   else if (pct >= 70) { stars = '⭐⭐'; msg = 'よくできました！'; }
-  else if (pct >= 50) { stars = '⭐'; msg = 'もう少しがんばろう！'; }
-  else { stars = ''; msg = 'もう一度読んでみよう！'; }
+  else if (pct >= 50) { stars = '⭐'; msg = 'もう少しじっくり読んでみよう！'; }
+  else { stars = ''; msg = 'もう一度ゆっくり読んでみよう！'; }
+
+  const totalReadingSec = log.sections.reduce((s, sec) => s + sec.readingSeconds, 0);
+  const totalRereadCount = log.sections.reduce((s, sec) => s + sec.rereadCount, 0);
+  const totalWrongAnswers = log.sections.reduce((s, sec) =>
+    s + sec.questions.reduce((ss, q) => ss + q.wrongChoicesTexts.length, 0), 0);
+
+  const sectionDetails = log.sections.map((sec) => {
+    const wrongQs = sec.questions.filter(q => q.wrongChoicesTexts.length > 0);
+    const wrongHtml = wrongQs.length ? wrongQs.map(q => `
+      <div class="log-wrong-item">
+        <div class="log-q">Q: ${q.q}</div>
+        <div class="log-a">えらんだ答え: ${q.wrongChoicesTexts.map(t => '「' + t + '」').join(' → ')}</div>
+      </div>
+    `).join('') : '<div class="log-ok-item">✨ 全問1回で正解！</div>';
+    return `
+      <div class="log-section">
+        <div class="log-title">${sec.title}</div>
+        <div class="log-row">📖 読書時間: ${formatTime(sec.readingSeconds)}　🔄 読み直し: ${sec.rereadCount}回</div>
+        ${wrongHtml}
+      </div>
+    `;
+  }).join('');
 
   el.innerHTML = `
     <div class="final-score">
       <h2>🏆 けっか発表 🏆</h2>
       <div class="stars">${stars}</div>
       <div class="big-score">${score} <span>/ ${totalQuestions}</span></div>
-      <p style="font-size:16px; color:#3b2a14; margin:16px 0;">${msg}</p>
-      <p style="font-size:13px; color:#6b5a3a; margin-bottom:20px;">正答率 ${pct}%</p>
-      <button class="mc-btn" onclick="resetGame()">もう一度あそぶ</button>
+      <p style="font-size:12px; color:#6b5a3a; margin:2px 0 10px;">1回で正解した数</p>
+      <p style="font-size:15px; color:#3b2a14; margin:10px 0;">${msg}</p>
+      <p style="font-size:13px; color:#6b5a3a; margin-bottom:12px;">正答率 ${pct}%</p>
+
+      <div class="log-summary-box">
+        <h3>📊 読書ログ</h3>
+        <div class="log-row">⏱ 読書時間の合計: <b>${formatTime(totalReadingSec)}</b></div>
+        <div class="log-row">📖 もう一度読んだ回数: <b>${totalRereadCount}回</b></div>
+        <div class="log-row">❌ まちがえた回数: <b>${totalWrongAnswers}回</b></div>
+      </div>
+
+      <details class="log-details">
+        <summary>パートごとの詳細をみる</summary>
+        <div class="log-sections">${sectionDetails}</div>
+      </details>
+
+      <button class="mc-btn" onclick="copyLog()" style="margin-top:14px">📋 ログをコピー</button>
+      <button class="mc-btn gray" onclick="resetGame()">もう一度あそぶ</button>
     </div>
   `;
 
   if (pct >= 70) {
     showSpeech('Yuuki', 'やったね！', 3000);
-    showSpeech('Don', 'ワン！', 3000);
   } else {
     showSpeech('Kent', 'もう一回！', 3000);
   }
+}
+
+function copyLog() {
+  const lines = [];
+  lines.push('🐾 やまねこ亭クイズ ログ');
+  lines.push('はじめ: ' + (log.startedAt ? new Date(log.startedAt).toLocaleString('ja-JP') : '-'));
+  lines.push('おわり: ' + (log.completedAt ? new Date(log.completedAt).toLocaleString('ja-JP') : '未完'));
+  lines.push('1回で正解: ' + score + ' / ' + totalQuestions);
+  const totalReadingSec = log.sections.reduce((s, sec) => s + sec.readingSeconds, 0);
+  const totalRereadCount = log.sections.reduce((s, sec) => s + sec.rereadCount, 0);
+  lines.push('読書時間の合計: ' + formatTime(totalReadingSec));
+  lines.push('もう一度読んだ回数: ' + totalRereadCount);
+  lines.push('');
+  log.sections.forEach(sec => {
+    lines.push('■ ' + sec.title);
+    lines.push('  読書時間: ' + formatTime(sec.readingSeconds) + ' / 読み直し: ' + sec.rereadCount + '回');
+    sec.questions.forEach((q, i) => {
+      if (q.wrongChoicesTexts.length > 0) {
+        lines.push('  Q' + (i+1) + ': ' + q.q);
+        lines.push('    間違えた: ' + q.wrongChoicesTexts.map(t => '「' + t + '」').join(' → '));
+      }
+    });
+    lines.push('');
+  });
+  const text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => alert('ログをコピーしました！'),
+      () => fallbackCopy(text)
+    );
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); alert('ログをコピーしました！'); }
+  catch(e) { alert('コピーできませんでした。画面のテキストを長押しでコピーしてね。'); }
+  document.body.removeChild(ta);
 }
 
 // ===== GAME CONTROL =====
@@ -1282,7 +1548,8 @@ function startGame() {
   currentSection = 0;
   currentQuestion = 0;
   score = 0;
-  answers = sections.map(s => s.questions.map(() => null));
+  answers = makeFreshAnswers();
+  log = makeFreshLog();
   phase = 'reading';
   saveProgress();
   render();
@@ -1296,20 +1563,7 @@ function resumeGame() {
   score = d.score;
   phase = d.phase;
   if (d.answers) answers = d.answers;
-  render();
-  window.scrollTo(0, 0);
-}
-
-function goToQuiz() {
-  currentQuestion = 0;
-  phase = 'quiz';
-  saveProgress();
-  render();
-  window.scrollTo(0, 0);
-}
-
-function goBackToReading() {
-  phase = 'reading';
+  if (d.log) log = d.log;
   render();
   window.scrollTo(0, 0);
 }
@@ -1333,7 +1587,6 @@ try {
   document.getElementById('content').innerHTML =
     '<div style="padding:20px;color:red;font-size:16px;">エラー: ' + e.message + '</div>';
 }
-// グローバルエラーキャッチ
 window.onerror = function(msg, url, line) {
   var el = document.getElementById('content');
   if (el) el.innerHTML = '<div style="padding:20px;color:red;font-size:16px;">エラー(L' + line + '): ' + msg + '</div>';
