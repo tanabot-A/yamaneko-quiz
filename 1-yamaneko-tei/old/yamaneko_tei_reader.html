@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="マイクラレストラン">
+<title>謎のマイクラレストラン</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif;
+    background: #f5efe0;
+    color: #2a2318;
+    min-height: 100vh;
+  }
+
+  /* ヘッダー */
+  .book-header {
+    background: linear-gradient(180deg, #3d2b1a 0%, #5a3a1a 100%);
+    color: #e8d5a3;
+    text-align: center;
+    padding: 24px 16px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .book-header h1 {
+    font-size: 22px;
+    letter-spacing: 4px;
+    margin-bottom: 4px;
+  }
+  .book-header .author {
+    font-size: 11px;
+    color: #b8a880;
+    letter-spacing: 2px;
+  }
+
+  /* 目次バー */
+  .toc-bar {
+    background: #e8d5a3;
+    border-bottom: 1px solid #cdb98a;
+    padding: 8px 16px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 70px;
+    z-index: 9;
+  }
+  .toc-btn {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 12px;
+    background: #f5efe0;
+    border: 1px solid #b89a6a;
+    border-radius: 3px;
+    color: #5a3a1a;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .toc-btn:active, .toc-btn.active {
+    background: #5a3a1a;
+    color: #e8d5a3;
+    border-color: #5a3a1a;
+  }
+
+  /* 本文エリア */
+  .book-body {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 24px 60px;
+  }
+
+  /* 章タイトル */
+  .chapter {
+    margin-top: 40px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #cdb98a;
+  }
+  .chapter:first-child { margin-top: 12px; }
+  .chapter h2 {
+    font-size: 20px;
+    color: #5a3a1a;
+    letter-spacing: 3px;
+  }
+
+  /* 段落 */
+  .para {
+    font-size: 16px;
+    line-height: 2.0;
+    margin-bottom: 12px;
+    text-indent: 0;
+  }
+
+  /* セリフ */
+  .dialogue {
+    font-size: 16px;
+    line-height: 2.0;
+    margin-bottom: 12px;
+  }
+
+  /* イタリック（心の声） */
+  .thought {
+    font-style: italic;
+    color: #6b5a3a;
+  }
+
+  /* 区切り線 */
+  .sep {
+    text-align: center;
+    margin: 20px 0;
+    color: #b89a6a;
+    font-size: 14px;
+    letter-spacing: 8px;
+  }
+
+  /* 看板 */
+  .sign {
+    background: #3d2b1a;
+    color: #e8d09a;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    line-height: 1.8;
+    padding: 16px 20px;
+    margin: 16px auto;
+    max-width: 340px;
+    border: 3px solid #8B6914;
+    border-radius: 4px;
+    white-space: pre-line;
+    text-align: center;
+  }
+
+  /* つづき表記 */
+  .continue {
+    text-align: center;
+    font-style: italic;
+    color: #8a7a5a;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+
+  /* 終わり */
+  .the-end {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #5a3a1a;
+    margin: 40px 0 16px;
+    letter-spacing: 6px;
+  }
+  .credit {
+    text-align: center;
+    font-size: 12px;
+    color: #8a7a5a;
+    font-style: italic;
+    margin-bottom: 40px;
+  }
+
+  /* 読書位置マーカー */
+  .bookmark-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: rgba(58,43,26,0.9);
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+  }
+  .bookmark-bar .progress-text {
+    color: #e8d5a3;
+    font-size: 11px;
+    font-family: 'Noto Serif JP', serif;
+  }
+  .bookmark-bar .progress-track {
+    flex: 1;
+    height: 4px;
+    background: #5a3a1a;
+    border-radius: 2px;
+    margin: 0 12px;
+    overflow: hidden;
+  }
+  .bookmark-bar .progress-fill {
+    height: 100%;
+    background: #e8d09a;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* iPad横向き */
+  @media (min-width: 768px) {
+    .book-body { padding: 20px 48px 60px; }
+    .para, .dialogue { font-size: 17px; line-height: 2.1; }
+    .book-header h1 { font-size: 26px; }
+    .chapter h2 { font-size: 22px; }
+    .sign { font-size: 15px; max-width: 400px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="book-header">
+  <h1>謎のマイクラレストラン</h1>
+  <div class="author">原作：宮沢賢治「注文の多い料理店」</div>
+</div>
+
+<div class="toc-bar" id="tocBar">
+  <button class="toc-btn" onclick="scrollToChapter('prologue')">プロローグ</button>
+  <button class="toc-btn" onclick="scrollToChapter('ch1')">第一章</button>
+  <button class="toc-btn" onclick="scrollToChapter('ch2')">第二章</button>
+  <button class="toc-btn" onclick="scrollToChapter('ch3')">第三章</button>
+  <button class="toc-btn" onclick="scrollToChapter('ch4')">第四章</button>
+  <button class="toc-btn" onclick="scrollToChapter('ch5')">第五章</button>
+</div>
+
+<div class="book-body" id="bookBody">
+
+<!-- プロローグ -->
+<div class="chapter" id="prologue"><h2>プロローグ　ドンのこと</h2></div>
+
+<p class="para">　ユウキが白樺の木材を置いたのは、もう何度目だろうと思いながらだった。</p>
+<p class="para">　棚の位置が、どうしても気に入らない。左に一マス。いや、やっぱり右に——結局、また壊して、また置き直す。</p>
+<p class="para">　窓から光が差し込んで、ガラスの花瓶に当たってきらきら光った。それを見てユウキは、まあいいか、と思った。光がきれいなら、棚の位置より大事なことだ。</p>
+<p class="para">　この家を建てるのに、三週間かかった。最初に骨組みを作って、屋根を白樺のハーフブロックにして、窓を大きくとって、内側の壁に飾り物を並べて——ケントには「そんなに時間かけてどうするの」と言われたけれど、どうも何も、家というのは自分が気持ちよくいられる場所でないと意味がない。</p>
+<p class="para">　壁には、これまでの探索で集めたものが飾ってある。ジャングルで見つけたオウムの羽、メサバイオームの赤い砂岩、深海で拾ったプリズマリンのかけら。旅の記録みたいなものだ。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para thought">　もう一個、棚を増やそうかな。</p>
+<p class="para">　そう考えていたとき、玄関の扉が開いた。</p>
+<p class="dialogue">「ユウキ、地下使うよ」</p>
+<p class="para">　ケントだった。肩にレッドストーンのブロックを山積みにして、当然のように中に入ってくる。</p>
+<p class="dialogue">「また？」とユウキは言った。「前回爆発したじゃない」</p>
+<p class="dialogue">「あれは計算ミス。今回は完ぺき」</p>
+<p class="dialogue">「同じこと前も言ってた」</p>
+<p class="dialogue">「今度こそ完ぺき」</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　ケントはもう靴を脱いで地下への梯子を降り始めている。止めても無駄だということはわかっていた。ケントは一度やると決めたら止まらない。それがうまくいくときは頼もしくて、うまくいかないときは——だいたい何かが爆発する。</p>
+<p class="para">　ユウキはため息をついて、棚の位置を確認してから外に出た。</p>
+<p class="para">　空は青かった。草原バイオームの風が吹いていて、羊が三匹、のんびりと草を食べている。遠くに山が見えて、その向こうに森がある。</p>
+<p class="para">　いつもの、平和な朝だった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　ドンに出会ったのは、その日の午後のことだ。</p>
+<p class="para">　ケントが「新しい森を見つけた、一緒に来て」と言った。珍しいことに地下の実験を早々に切り上げて——後で聞いたら小さな爆発が一回あったらしい——外に出てきた。</p>
+<p class="dialogue">「どのくらい遠い？」</p>
+<p class="dialogue">「走って五分くらい」</p>
+<p class="para">　ユウキはなんとなく、骨を一本ポケットに入れた。なぜかはわからなかった。ただ、持っていきたい気がした。</p>
+<p class="dialogue">「何それ」とケントが言った。</p>
+<p class="dialogue">「ドン用」</p>
+<p class="dialogue">「ドンってだれ」</p>
+<p class="dialogue">「……わからない」とユウキは言った。「でも、持っていったほうがいい気がする」</p>
+<p class="para">　ケントは何も言わなかった。ユウキがときどき意味のわからないことを言うのは、もう慣れていた。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　森は、草原の端にある。白樺の木が多いところで、日が差し込んでいてきれいな場所だった。ユウキは木の種類と、葉の形と、地面に生えているきのこの配置を見ながら歩いた。そういうところに目がいくのは、たぶん家づくりのせいだ。いいものを見ると、どこかに使えないか考えてしまう。</p>
+<p class="para">　オオカミの声が聞こえたのは、太い木の陰に差し掛かったときだった。</p>
+<p class="para">　低い、小さな唸り声。</p>
+<p class="para">　ケントが剣に手をかけるより先に、ユウキはしゃがんでいた。</p>
+<p class="para">　木の根元に、白いオオカミがいた。まだ子供で、足元がおぼつかない感じがある。群れからはぐれたのか、一匹でそこにいた。ユウキと目が合って、小さく後ずさりした。</p>
+<p class="dialogue">「近づかないほうが——」とケントが言った。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　ユウキはポケットから骨を取り出した。持ってきておいてよかった、と思いながら、手を前に伸ばして、じっと待った。</p>
+<p class="para">　オオカミはしばらく唸っていた。</p>
+<p class="para">　でも、少しずつ近づいてきた。</p>
+<p class="para">　鼻を近づけて、においを嗅いで、ゆっくりと骨を咥えた。</p>
+<p class="para">　オオカミの首に、赤い首輪が現れた瞬間、ユウキの胸が温かくなった。</p>
+<p class="dialogue">「ドン」とユウキは言った。「よろしくね」</p>
+<p class="dialogue">「なんでドンなの」とケントが後ろから言った。</p>
+<p class="dialogue">「強そうだから」</p>
+<p class="dialogue">「……全然強そうじゃないけど」</p>
+<p class="para">　ケントの声が少し笑っていた。ユウキが振り向くと、ケントはドンの頭に手を伸ばして、ぽんぽんと撫でていた。照れているのか、ユウキのほうを見ていなかった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　それからの日々は、穏やかだった。</p>
+<p class="para">　朝、ユウキが起きるとドンは玄関の前で待っている。探索に出かけるとき、ドンは必ず先を歩く。帰ってくると、ユウキの足元にくっついて離れない。</p>
+<p class="para">　ケントが作った自動ドアに、ドンがはまった。感知センサーの前を行ったり来たりして、開いては閉まる扉を何度も通り抜ける。その様子をケントは「やめてよ、扉がこわれる」と言いながら、結局30分も眺めていた。</p>
+<p class="para">　夜はドンがユウキのベッドの下で眠る。時々夢を見るのか、寝ながら小さく唸ることがある。そういうとき、ユウキは手を伸ばして頭を撫でると、ドンはまたすうっと静かになった。</p>
+<p class="para">　ケントとユウキとドン。このワールドで、三人はいつも一緒だった。</p>
+<p class="para">　——あの日まで。</p>
+
+<!-- 第一章 -->
+<div class="chapter" id="ch1"><h2>第一章　見たことのないバイオーム</h2></div>
+
+<p class="para">　その日は、特別な予定があったわけじゃない。</p>
+<p class="para">　ケントが「地図の端っこまで行ってみたい」と言ったから、ユウキはドンを連れて出かけた。それだけだった。お昼前に出て、夕方には帰れるだろうと思っていた。</p>
+<p class="para">　最初の一時間は、よく知っている道だった。草原を抜けて、川を渡って、白樺の森を通り過ぎる。ドンが先を走って、時々振り返って、こっちだよというように尾を振る。ケントは地図を広げながら歩いて、「このまま北に行けばまだいったことのんない場所に出るはず」と言った。</p>
+<p class="para">　二時間目あたりで、道がなくなった。</p>
+<p class="para">　正確には、知っている景色がなくなった。木の種類が変わって、アカシアでも白樺でもない、見たことのない色の幹が続いている。地面の草が、少し青みがかっている気がする。空の色が——</p>
+<p class="dialogue">「ケント」</p>
+<p class="dialogue">「うん」</p>
+<p class="dialogue">「空、なんか変じゃない？」</p>
+<p class="para">　ケントが上を向いた。空は青かった。でも、ふつうの青じゃない。少し濁った、水底みたいな青だった。</p>
+<p class="dialogue">「バイオームが変わったんだと思う」とケントは言った。「珍しいやつかも。地図に記録しよう」</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　そのときユウキは気づいた。</p>
+<p class="para">　足元を見た。後ろを見た。左を見た。右を見た。</p>
+<p class="dialogue">「ドンがいない」</p>
+<p class="para">　ケントが地図から顔を上げた。</p>
+<p class="dialogue">「え」</p>
+<p class="dialogue">「ドンがいない。さっきまで前を歩いてたのに」</p>
+<p class="para">　二人で来た道を振り返った。木が続いている。草が続いている。どこにも白い毛並みは見えない。</p>
+<p class="dialogue">「ドン！」</p>
+<p class="para">　ユウキは呼んだ。声が、森に吸い込まれていくみたいだった。</p>
+<p class="para">　エコーが返ってこない。鳥の声もない。風の音もない。</p>
+<p class="para">　しんと、静かだった。</p>
+<p class="dialogue">「ドン！　ドン！」</p>
+<p class="dialogue">「落ち着いて」とケントが言った。「テイムしてるんだから、遠くには行かないはずだよ。戻ってくる」</p>
+<p class="dialogue">「でも——」</p>
+<p class="dialogue">「大丈夫」</p>
+<p class="para">　ケントの声は落ち着いていた。いつものケントの声だった。それでユウキは少しだけ息を吐いた。</p>
+<p class="para">　でも。</p>
+<p class="para">　この森には、音がなかった。モブが出るはずの夕暮れが近づいているのに、どこからもスポーンの気配がない。葉が揺れない。水の音がしない。まるでこの場所だけが、ゲームの外側にあるみたいな静けさだった。</p>
+<p class="dialogue">「先に進もう」とケントが言った。「開けた場所に出れば、ドンも見つけやすくなる」</p>
+<p class="para">　ユウキはもう一度後ろを見た。</p>
+<p class="para">　それから、ケントについて歩き始めた。</p>
+<p class="para">　足の下で、青みがかった草が、音もなく踏みしだかれた。</p>
+
+<!-- 第二章 -->
+<div class="chapter" id="ch2"><h2>第二章　山猫亭</h2></div>
+
+<p class="para">　開けた場所に出たのは、それからさらに十分ほど歩いたあとだった。</p>
+<p class="para">　木々が急に途切れて、広場のようになっている。地面は深層岩で舗装されていた。自然にこうなるはずがない。誰かが、ここを整地したのだ。</p>
+<p class="para">　ケントが立ち止まった。</p>
+<p class="para">　ユウキも立ち止まった。</p>
+<p class="para">　広場の奥に、建物があった。</p>
+<p class="para">　大きかった。</p>
+<p class="para">　ユウキが今まで見たどんな建築より、ずっと大きかった。土台はディープスレートで、壁はネザーレンガと磨かれた黒石が交互に積まれている。窓には紫色のステンドグラスがはめられていて、中からぼんやりと光が漏れていた。屋根は黒くて尖っていて、てっぺんに旗が立っている。旗には、猫の顔の模様があった。</p>
+<p class="para">　ユウキは思わず全部を見渡した。</p>
+<p class="para thought">　すごい。</p>
+<p class="para">　怖いとか、変だとか、そういう気持ちより先に、そう思った。このネザーレンガの積み方、角の処理、窓の大きさのバランス——全部が計算されている。誰かが、ものすごく時間をかけて、ものすごく丁寧に作った建物だった。</p>
+<p class="dialogue">「でかいね」とケントが言った。</p>
+<p class="dialogue">「でかいだけじゃない」とユウキは言った。「すごく、上手に作ってある」</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　入口の前に、看板が立っていた。</p>
+<p class="para">　金色の文字で、こう書いてあった。</p>
+
+<div class="sign">山 猫 亭
+
+しんりんさいごの
+こうきゅうレストラン
+
+どなたさまも
+だいかんげいいたします</div>
+
+<p class="dialogue">「レストラン」とケントが言った。声が明るくなった。「ごはん食べられるじゃん」</p>
+<p class="dialogue">「こんなところに？」</p>
+<p class="dialogue">「あるんだからいいじゃない。おなかすいた」</p>
+<p class="para">　たしかに、ユウキもおなかがすいていた。お昼を食べそびれていたのだ。</p>
+<p class="para">　でも。</p>
+<p class="para">　ユウキはもう一度、建物を見た。</p>
+<p class="para">　窓から漏れる光が、さっきより少し赤みがかって見えた。夕暮れが近いせいかもしれない。でも、夕陽の差し込む方向と、光の角度が合っていない気がした。</p>
+<p class="para thought">　あの光、外から来てるんじゃない。</p>
+<p class="para">　中から、光っているのだ。</p>
+
+<div class="sep">* * *</div>
+
+<p class="dialogue">「入ろうよ」とケントが言った。</p>
+<p class="para">　ユウキは入口の扉を見た。ドアは黒樫の木材で作られていて、金色の取っ手がついていた。取っ手の形が、猫の手の形をしていた。</p>
+<p class="para thought">　ドンがいれば、よかった。</p>
+<p class="para">　そう思ったけれど、声には出さなかった。</p>
+<p class="dialogue">「……入口に、また看板がある」</p>
+<p class="para">　扉の横に、もう一枚の看板があった。先ほどより文字が小さい。ユウキは近づいて読んだ。</p>
+
+<div class="sign">おそれいりますが
+
+ぼうぐ・ぶきるいの
+おきゃくさまは
+ご入店いただけません
+
+チェストにおあずけの
+うえ　ごにゅうてん
+ください
+
+（当店は高級店です。
+　マナーをお守りを）</div>
+
+<div class="sep">* * *</div>
+
+<p class="dialogue">「防具をあずけろって」とケントが言った。「高級店ってそういうもんか。まあ、レストランに剣持って入るのも変か」</p>
+<p class="para">　ケントはあっさりと、ダイヤの剣をチェストに入れた。防具も外した。チェストは扉の横に、最初からそこにあったかのように置いてあった。</p>
+<p class="para">　ユウキは少し迷った。</p>
+<p class="para">　弓を、チェストに入れた。</p>
+<p class="para">　革の防具も、外した。</p>
+<p class="para">　チェストの蓋が、音もなく閉じた。</p>
+<p class="dialogue">「よし」とケントが言った。「入ろう」</p>
+<p class="para">　扉を開けると、温かい空気が流れてきた。香辛料のような、甘いような、でも少し鼻の奥が痛くなるような匂いがした。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　中は、広かった。</p>
+<p class="para">　エントランスホールといえばいいのか、天井が高くて、壁に松明ではなくシーランタンが規則正しく並んでいた。だから光が均一で、影ができない。ユウキはそこが少し気になった。影のない部屋というのは、どこか現実感がない。</p>
+<p class="para">　床は磨かれた閃緑岩で、歩くと足音が響いた。</p>
+<p class="para">　壁には額縁が並んでいて、中に絵が飾られている。近づいて見ると、どれも食べ物の絵だった。スープ、パン、肉料理、ケーキ——どれも丁寧に描かれていて、おいしそうだった。でもよく見ると、どの絵の食器にも、スプーンが二本ずつ置いてある。ナイフがない。フォークもない。スプーンだけ。</p>
+<p class="para thought">　なんでスプーンだけなんだろう。</p>
+<p class="para">　考えかけたとき、ケントが「こっちに続いてる」と言った。</p>
+<p class="para">　正面に廊下があって、奥に扉が見えた。扉の上に、また看板がかかっていた。</p>
+
+<div class="sign">ごゆっくり
+おすすみください
+
+おりょうりは
+おくにご
+ようい　しております</div>
+
+<div class="sep">* * *</div>
+
+<p class="para">　お料理は、奥にご用意しております。</p>
+<p class="para">　ユウキはその文字を読んで、また壁の額縁を見た。スプーンが二本の絵。影のない部屋。入口でなくなった武器と防具。</p>
+<p class="para">　何かが、頭の隅で引っかかっていた。</p>
+<p class="para">　でもそれが何なのか、まだわからなかった。</p>
+<p class="para">　ケントはもう廊下を歩き始めている。</p>
+<p class="para">　ユウキは一度だけ、来た扉を振り返った。</p>
+<p class="para">　外の光は、もうほとんど見えなかった。</p>
+<p class="para thought">　ドン。</p>
+<p class="para">　心の中で、呼んだ。</p>
+<p class="para">　それから、ケントのあとを追って歩き始めた。足音が、シーランタンの白い光の下で、規則正しく響いた。</p>
+
+<!-- 第三章 -->
+<div class="chapter" id="ch3"><h2>第三章　注文の多いお店</h2></div>
+
+<p class="para">　廊下は、思ったより長かった。</p>
+<p class="para">　シーランタンが等間隔に並んでいて、どこまで歩いても同じ景色が続く。壁の模様も、床の色も、変わらない。ユウキはふと、自分たちがずっと同じ場所をぐるぐると歩いているんじゃないかという気がした。でもケントの足音が前を進んでいるから、ちゃんと前に進んでいるはずだった。</p>
+<p class="para">　突き当たりに、扉があった。</p>
+<p class="para">　扉の上に、看板がかかっていた。</p>
+
+<div class="sign">だいいちのま
+
+おねがいがございます
+
+ポーションるいは
+においがつよく
+おりょうりのあじを
+そこないます
+
+たるの中へ
+おあずけください</div>
+
+<div class="sep">* * *</div>
+
+<p class="dialogue">「ポーションか」とケントが言った。持物袋を開いて、確認する。「回復ポーションが二本と、透明化が一本あるけど」</p>
+<p class="dialogue">「捨てるの？」</p>
+<p class="dialogue">「あずけるだけって書いてある」</p>
+<p class="para">　ユウキは自分の持物袋も開いた。夜目のポーションが一本。それをたるに入れた。ケントも三本を入れた。</p>
+<p class="para">　たるの蓋が閉じた。</p>
+<p class="para">　扉を開けると、部屋に入った。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　第一の間は、ダイニングルームのような作りだった。</p>
+<p class="para">　長いテーブルが中央に置いてあって、両側に椅子が並んでいる。テーブルクロスは深緑色で、上にはキャンドルが等間隔に立っていた。キャンドルの炎が揺れている——でも、風はない。</p>
+<p class="para thought">　なんで炎が揺れてるんだろう。</p>
+<p class="para">　ユウキはそこが気になったけれど、黙って歩いた。</p>
+<p class="para">　テーブルの上に、料理はなかった。皿もなかった。あるのはスプーンだけ。二本ずつ、全部の席に置いてある。エントランスの絵と同じだ。</p>
+<p class="para">　部屋の奥に、また扉があった。また看板がかかっていた。</p>
+
+<div class="sign">だいにのま
+
+とくせいスパイスを
+ごようい　しております
+
+びんの中身を
+おふたりとも
+ぜんしんに
+よくすりこんで
+おすすみください
+
+（おいしいおりょうりの
+　ひみつです）</div>
+
+<div class="sep">* * *</div>
+
+<p class="para">　扉の横に、小さな棚があった。棚の上に、ガラス瓶が二本置いてある。中に、白い粉が入っていた。</p>
+<p class="dialogue">「スパイス？」とケントが瓶を手に取った。蓋を開けて、においを嗅ぐ。「なんか、塩みたいな感じ。あとちょっと甘い」</p>
+<p class="dialogue">「全身に塗るって……」</p>
+<p class="dialogue">「おいしい料理のひみつって書いてある。シェフのこだわりじゃない？」</p>
+<p class="para">　ユウキは瓶を見た。白い粉。塩と、何か甘いもの。</p>
+<p class="para thought">　料理のひみつ。</p>
+<p class="para">　その言葉が、頭の中で変な感じがした。でも何がおかしいのか、まだうまく言葉にできなかった。</p>
+<p class="dialogue">「ケント、なんか変じゃない？」</p>
+<p class="dialogue">「何が？」</p>
+<p class="dialogue">「防具を取られて、ポーションを取られて、今度は体にスパイスを塗れって」</p>
+<p class="dialogue">「高級店ってそういうもんだよ」とケントは言った。「ほら、温泉旅館とか行ったら、入る前にいろいろ言われるじゃない。それと同じ」</p>
+<p class="para">　ケントはもう白い粉を手に取って、腕に擦り込み始めていた。</p>
+<p class="para">　ユウキは少し迷った。</p>
+<p class="para">　でも、他に選択肢がなかった。来た廊下を戻ろうとしても、さっきの扉がどこにあったか、もうわからない気がした。</p>
+<p class="para">　瓶を手に取って、粉を手のひらに出した。</p>
+<p class="para">　冷たかった。不思議なくらい、冷たかった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　第二の間を抜けると、また廊下があった。</p>
+<p class="para">　今度は短かった。すぐに扉が見えた。</p>
+<p class="para">　でも今度の看板は、前の二枚と少し違った。</p>
+<p class="para">　文字が、小さかった。まるで、あまり読まれたくないみたいに。</p>
+
+<div class="sign">だいさんのま
+
+このさきは
+とくべつしつです
+
+おきゃくさまの
+もちものは
+すべてこちらへ
+
+さいふ　たべもの
+どうぐるいいっさい
+
+おあずけください</div>
+
+<div class="sep">* * *</div>
+
+<p class="dialogue">「全部？」とユウキは言った。</p>
+<p class="dialogue">「全部って書いてある」</p>
+<p class="dialogue">「食べ物まで？」</p>
+<p class="dialogue">「特別室だから、全部向こうで用意してくれるんじゃない？」ケントはもう持物袋を開いていた。「どうせここまで来たんだし」</p>
+<p class="para">　ユウキは持物袋を見た。</p>
+<p class="para">　もうほとんど何もない。ポーションはさっき取られた。弓は入口で取られた。食べ物——パンが三つと、焼いた鶏肉が二本。それから、骨が一本。</p>
+<p class="para thought">　ドン用に取っておいた骨だ。</p>
+<p class="para">　ユウキはその骨を持物袋の端に移動した。そっと、目立たないように。</p>
+<p class="para">　他のものは全部、チェストに入れた。</p>
+<p class="para">　チェストの蓋が閉じた。三度目だった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　第三の間は、それまでの部屋と雰囲気が違った。</p>
+<p class="para">　天井が低かった。壁が近かった。シーランタンではなく、赤い松明が使われていて、部屋全体がじわじわと赤く染まっていた。</p>
+<p class="para">　ユウキは入った瞬間に、足が少し止まった。</p>
+<p class="para">　壁を見た。</p>
+<p class="para">　かまどがあった。</p>
+<p class="para">　大きな、業務用のかまどが、壁一面に並んでいた。全部に火が入っていて、赤い光を放っている。その前に鍋が置いてあった。大きな鍋が、二つ。</p>
+<p class="para thought">　二つ。</p>
+<p class="para">　ふたり分だ、とユウキは思った。でもすぐに、違う考え方を打ち消した。</p>
+<p class="dialogue">「すごいキッチンだね」とケントが言った。「本格的」</p>
+<p class="dialogue">「……うん」</p>
+<p class="para">　ユウキは鍋を見た。鍋の中は空だった。何も入っていない。でも、火はついている。待っているみたいに、ぐつぐつと沸騰していた。</p>
+<p class="para">　部屋の奥に、今日最後の扉が見えた。</p>
+<p class="para">　看板が、かかっていた。</p>
+
+<div class="sign">もうすぐ
+おしょくじです
+
+このおへやで
+ごゆっくり
+おくつろぎのうえ
+
+スープが
+に
+なるまで
+おまちください</div>
+
+<div class="sep">* * *</div>
+
+<p class="para">　ユウキは、その文字を二度読んだ。</p>
+<p class="para thought">　スープが。</p>
+<p class="para thought">　に。</p>
+<p class="para thought">　なるまで。</p>
+<p class="dialogue">「ケント」</p>
+<p class="dialogue">「ん？」</p>
+<p class="dialogue">「この看板」</p>
+<p class="dialogue">「どうした？　早く進もうよ、おなかす——」</p>
+<p class="dialogue">「読んで」とユウキは言った。「ちゃんと、読んで」</p>
+<p class="para">　ケントが看板の前に立った。声に出して読んだ。</p>
+<p class="dialogue">「スープが……に……なるまで？」ケントが眉をひそめた。「スープができるまで、じゃなくて？」</p>
+<p class="dialogue">「できる、じゃない。なる、って書いてある」</p>
+<p class="para">　しんと、静かになった。</p>
+<p class="para">　ユウキは鍋を見た。空の鍋。沸騰したお湯。ふたり分。</p>
+<p class="para">　壁を見た。かまど。火。熱。</p>
+<p class="para">　床を見た。まな板がある。包丁がある——でも包丁は刃が上を向いて置いてあって、ふつうの料理人はそんな置き方をしない。</p>
+<p class="para">　天井を見た。フックがある。何かをぶら下げるための、大きなフック。</p>
+<p class="para thought">　ふつうのレストランのキッチンは、客席から見えないところにある。</p>
+<p class="para thought">　でもこの部屋は——</p>
+<p class="para thought">　キッチンが、客席だ。</p>
+<p class="dialogue">「ケント」とユウキは言った。声が、自分でも驚くくらい静かだった。「わたしたち、お客さんじゃない」</p>
+<p class="para">　ケントが振り返った。</p>
+<p class="dialogue">「え」</p>
+<p class="dialogue">「わたしたちが——」</p>
+<p class="para">　そのとき、来た扉が、音もなく閉じた。</p>
+<p class="para">　かちり、と鍵のかかる音がした。</p>
+<p class="para">　壁の向こうから、何かが動く気配がした。たくさんの、小さな足音。じわじわと、こちらに近づいてくる。</p>
+<p class="para">　赤い松明の光の中で、壁のすき間から——緑色の目が、光った。</p>
+
+<!-- 第四章 -->
+<div class="chapter" id="ch4"><h2>第四章　逃げられない</h2></div>
+
+<p class="para">　緑色の目は、一つじゃなかった。</p>
+<p class="para">　壁のすき間から、天井の角から、床の継ぎ目から——いくつも、いくつも、光っていた。じっとこちらを見ている。まばたきをしない。</p>
+<p class="para">　ユウキは動けなかった。</p>
+<p class="para">　足が、床に貼りついているみたいだった。</p>
+<p class="dialogue">「ケント」とユウキは言った。「来た扉、閉まった」</p>
+<p class="dialogue">「わかってる」</p>
+<p class="para">　ケントの声は静かだった。でも、いつもの落ち着いた静かさじゃない。別の、種類の静かさだった。</p>
+<p class="dialogue">「奥の扉は？」</p>
+<p class="para">　ユウキは奥を見た。さっきまで見えていた扉が——消えていた。壁と、同じ色になっていた。継ぎ目も、取っ手も、何もない。ただの壁だった。</p>
+<p class="dialogue">「ない」</p>
+<p class="dialogue">「ない？」</p>
+<p class="dialogue">「扉が、なくなってる」</p>
+<p class="para">　ケントが奥に走った。壁を叩いた。こんこん、と乾いた音がした。どこにもすき間はない。</p>
+<p class="para">　壁の向こうの足音が、少し大きくなった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　ユウキは持物袋を開いた。</p>
+<p class="para">　何もない。武器も、防具も、食べ物も、ポーションも——全部、取られた。</p>
+<p class="para thought">　骨。</p>
+<p class="para">　持物袋の端に、一本だけ残っていた。ドン用の骨。チェストに入れなかった骨。</p>
+<p class="para">　でも骨は武器じゃない。ここから逃げる方法にも、ならない。</p>
+<p class="para thought">　ドン。今どこにいるの。</p>
+<p class="dialogue">「ケント、壁を壊せない？」</p>
+<p class="dialogue">「素手じゃ無理だよ、ディープスレートだから」ケントが壁を見回した。「松明は？　松明があれば——」</p>
+<p class="dialogue">「松明、持ってない」</p>
+<p class="dialogue">「ぼくも持ってない」</p>
+<p class="para">　二人は顔を見合わせた。</p>
+<p class="para">　壁の目が、また増えていた。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　ユウキは深呼吸をした。</p>
+<p class="para">　パニックになったら終わりだ、と思った。ケントが論理的に考えられるのは、感情が揺れていないときだけだ。だから自分が落ち着かないといけない。</p>
+<p class="para">　部屋をもう一度、見渡した。</p>
+<p class="para">　かまど。鍋。まな板。フック。赤い松明。閉じた扉。消えた扉。緑の目。</p>
+<p class="para thought">　松明。</p>
+<p class="para">　赤い松明が、壁に刺さっている。</p>
+<p class="dialogue">「ケント」</p>
+<p class="dialogue">「何」</p>
+<p class="dialogue">「松明、壁から抜けない？」</p>
+<p class="para">　ケントが振り返った。一秒考えて、走った。壁の松明に手を伸ばして——抜けた。</p>
+<p class="para">　松明が手の中に来た瞬間、緑の目が一斉に動いた。</p>
+<p class="para">　壁のすき間が、ぐにゃりと広がった。</p>
+<p class="para">　最初の一匹が、姿を現した。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　山猫だった。</p>
+<p class="para">　でも、ユウキが知っているオセロットやネコとは違った。体が大きい。肩の高さがユウキの腰くらいある。毛並みは黒と灰色で、耳の先が鋭く尖っている。目だけが、緑色に光っていた。</p>
+<p class="para">　低く、喉の奥から唸る声がした。</p>
+<p class="para">　二匹目が出てきた。三匹目が出てきた。</p>
+<p class="dialogue">「燃やせる？」とユウキは言った。</p>
+<p class="dialogue">「松明一本じゃ無理だよ」とケントが言った。「近づいてきたらおどすくらいしか——」</p>
+<p class="para">　山猫がじりじりと前に出てきた。松明の火を見て、一瞬止まった。でも止まっただけで、引かなかった。</p>
+<p class="para thought">　ダメだ。時間の問題だ。</p>
+<p class="para">　ユウキは部屋の隅に下がった。壁が背中に当たった。もう下がれない。</p>
+<p class="para">　そのとき。</p>
+<p class="para">　手の中の骨が、熱くなった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　最初、気のせいだと思った。</p>
+<p class="para">　でも骨は確かに温かかった。さっきまで普通のアイテムだったのに、今は手のひらに確かな熱がある。</p>
+<p class="para thought">　ドン用の骨。</p>
+<p class="para">　ユウキは骨を見た。</p>
+<p class="para">　骨の端が、かすかに光っていた。白い、やわらかい光。</p>
+<p class="para thought">　ドン。</p>
+<p class="para">　心の中でもう一度呼んだ。声には出さなかった。でも骨の光が、少し強くなった気がした。</p>
+<p class="para">　山猫が、跳んだ。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　目をつぶった。</p>
+<p class="para">　でも、衝撃は来なかった。</p>
+<p class="para">　代わりに——遠吠えが聞こえた。</p>
+<p class="para">　低くて、長くて、壁を震わせるような声だった。</p>
+<p class="para">　山猫が、ぴたりと止まった。</p>
+<p class="para">　壁の向こうから、ドンドン、と激しく叩く音が聞こえた。一箇所じゃない。二箇所、三箇所、四箇所——壁の全体が、外から叩かれている。</p>
+<p class="dialogue">「何が——」とケントが言いかけた。</p>
+<p class="para">　壁が、壊れた。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　ディープスレートが粉砕されて、冷たい外の空気が流れ込んできた。</p>
+<p class="para">　白い影が、次々と飛び込んできた。</p>
+<p class="para">　大きい。ドンより大きい。群れだった。白いオオカミの群れが、壁の穴から一匹また一匹と入ってきて、山猫たちの間に割り込んだ。</p>
+<p class="para">　先頭の一匹が、ユウキの前に立った。</p>
+<p class="para">　首輪がある。赤い首輪が。</p>
+<p class="dialogue">「ドン」とユウキは言った。</p>
+<p class="para">　ドンが振り返った。一瞬だけ、ユウキを見た。</p>
+<p class="para">　それから山猫のほうを向いて、低く唸った。</p>
+<p class="para">　山猫たちが、後ずさった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　戦いは、長くなかった。</p>
+<p class="para">　数で負けていた山猫たちは、白狼の群れに押されて壁のすき間に消えていった。最後の一匹が消えると、部屋が静かになった。</p>
+<p class="para">　赤い松明だけが、ぱちぱちと音を立てていた。</p>
+<p class="dialogue">「行こう」とケントが言った。声が少し震えていた。「穴から出られる」</p>
+<p class="para">　ユウキはドンのそばにしゃがんだ。</p>
+<p class="para">　頭を抱えた。ドンが顔をユウキの首に押しつけてきた。温かかった。</p>
+<p class="dialogue">「どこにいたの」とユウキは言った。「ずっと探してたよ」</p>
+<p class="para">　ドンは何も言わなかった。ただ、じっとそこにいた。</p>
+<p class="dialogue">「行こう、ユウキ」</p>
+<p class="para">　ユウキは立ち上がった。</p>
+<p class="para">　壁の穴から、外の空気が流れ込んでいた。暗かった。夜になっていた。でも星が見えた。</p>
+<p class="para">　三人は、穴をくぐった。</p>
+
+<!-- 第五章 -->
+<div class="chapter" id="ch5"><h2>第五章　もとの世界へ</h2></div>
+
+<p class="para">　外は、夜だった。</p>
+<p class="para">　でも、おかしな夜だった。</p>
+<p class="para">　空に星はある。月もある。でも木がない。さっきまであった森が、どこにも見えない。広場だけがあって、その真ん中に二人とドンと、白狼の群れがいた。</p>
+<p class="para">　ユウキは振り返った。</p>
+<p class="para">　山猫亭が——なかった。</p>
+<p class="para">　さっきまでたしかにそこにあったはずの、ネザーレンガの巨大な建物が、どこにもなかった。深層岩の舗装も、入口の看板も、金色の文字も。ただ暗い地面が続いているだけだった。</p>
+<p class="dialogue">「ケント」</p>
+<p class="dialogue">「見てる」とケントは言った。「ぼくも見てる」</p>
+<p class="para">　二人はしばらく、何もない場所を眺めていた。</p>
+<p class="para">　ドンが静かに、ユウキの足元に座った。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　白狼の群れは、いつの間にか消えていた。</p>
+<p class="para">　気づいたときにはいなかった。音もなく、気配もなく、ただいなくなっていた。ドン一匹だけが残って、ユウキのそばにいた。</p>
+<p class="dialogue">「あの子たちは？」とユウキは言った。</p>
+<p class="dialogue">「わからない」とケントは言った。「でも……ドンが連れてきたんだと思う」</p>
+<p class="dialogue">「ドンが？」</p>
+<p class="dialogue">「テイムしてるんだから、ドンはユウキのことを追いかけてたはずだよ。でも建物に入れなかった。だから——」ケントが少し間を置いた。「仲間を集めたんじゃないかな」</p>
+<p class="para">　ユウキはドンを見た。</p>
+<p class="para">　ドンは前を向いていた。どこか遠くを、じっと見ていた。</p>
+<p class="dialogue">「ドン」とユウキは言った。「ありがとう」</p>
+<p class="para">　ドンの耳が、少し動いた。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　歩き始めると、道がわかった。</p>
+<p class="para">　不思議なことに、あれだけ迷っていたのに、今は来た方向がはっきりとわかった。ケントも何も言わずに同じ方向を歩いている。二人とも、確かめ合わなかった。ただ歩いた。</p>
+<p class="para">　木が戻ってきた。いつもの白樺の木。いつもの草の色。空の濁りが消えて、ふつうの夜空になった。</p>
+<p class="para">　川を渡った。草原に出た。遠くに、ユウキの家の明かりが見えた。</p>
+<p class="para thought">　ああ、帰ってきた。</p>
+<p class="para">　そう思ったとき、ユウキは少し泣きそうになった。泣かなかったけど。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　家に入って、ユウキは壁の額縁を見た。</p>
+<p class="para">　ジャングルのオウムの羽。メサの赤い砂岩。深海のプリズマリン。全部、ちゃんとある。</p>
+<p class="para">　棚の位置は、まだ少し気に入らなかった。</p>
+<p class="para">　でも今夜は、もういいと思った。</p>
+<p class="dialogue">「泊まっていく？」とユウキはケントに言った。</p>
+<p class="dialogue">「……うん」とケントは言った。いつもなら「べつに」とか「どうせ地下の実験があるし」とか言うのに、今夜は素直だった。</p>
+<p class="para">　ドンがベッドの下に潜り込んだ。いつもの場所だ。</p>
+<p class="para">　ユウキは横になって、天井を見た。</p>
+<p class="para thought">　あの建物は、どこに行ったんだろう。</p>
+<p class="para thought">　わたしたちは、何だったんだろう。</p>
+<p class="para">　考えているうちに、眠くなった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　次の朝、ケントがぽつりと言った。</p>
+<p class="dialogue">「ユウキ、鏡見た？」</p>
+<p class="para">　ユウキは洗面台の鏡を見た。</p>
+<p class="para">　髪に、白いものが混じっていた。一本じゃない。何本か、確かに白くなっていた。昨日まではなかったはずだ。</p>
+<p class="dialogue">「ケントは？」</p>
+<p class="dialogue">「顔に」とケントは言った。鏡を指差した。「ここ」</p>
+<p class="para">　ケントの目尻に、細いしわが一本増えていた。</p>
+<p class="para">　二人は黙って鏡を見た。</p>
+<p class="dialogue">「探索記録、確認した？」とユウキは言った。</p>
+<p class="dialogue">「した」とケントは言った。「あの座標、何も記録されてない。建物も、広場も、あのバイオームも——何も残ってない」</p>
+<p class="para">　しんと、静かになった。</p>
+<p class="para">　ドンが台所から出てきて、二人の間に座った。ドンはいつもと同じ顔をしていた。何も変わっていない顔を。</p>
+<p class="dialogue">「ねえケント」とユウキは言った。</p>
+<p class="dialogue">「うん」</p>
+<p class="dialogue">「あれって——」</p>
+<p class="dialogue">「わからない」とケントは言った。少し間があって、それから静かに続けた。「でもたぶん、誰かにとってはふつうのことなんだと思う。わたしたちが知らないだけで」</p>
+<p class="para">　ユウキは窓の外を見た。</p>
+<p class="para">　草原バイオームの朝の光。羊が三匹、草を食べている。いつもの景色だった。</p>
+<p class="para thought">　いつもの、景色だった。</p>
+<p class="para">　ドンが立ち上がって、玄関の方へ歩いていった。散歩に行きたいらしい。</p>
+<p class="dialogue">「行こうか」とユウキは言った。</p>
+<p class="dialogue">「うん」とケントは言った。</p>
+<p class="para">　二人は玄関を出た。</p>
+<p class="para">　ドンが先を歩いた。</p>
+<p class="para">　草原の風が、少し冷たかった。</p>
+
+<div class="sep">* * *</div>
+
+<p class="para">　その日の探索記録には、何も書かれなかった。</p>
+<p class="para">　ユウキの日記にも。ケントのメモにも。</p>
+<p class="para">　ただ、ユウキの額縁に——いつの間にか、一つだけ新しいアイテムが飾られていた。</p>
+<p class="para">　黒くて小さな、猫の手の形をした、金色の取っ手が。</p>
+<p class="para">　ユウキはそれを見るたびに、すこし、息が止まった。</p>
+<p class="para">　でも、捨てなかった。</p>
+<p class="para">　なぜかは、わからなかった。</p>
+
+<div class="the-end">おわり</div>
+<p class="credit">この物語は、宮沢賢治「注文の多い料理店」をもとに書かれました。</p>
+
+</div><!-- /book-body -->
+
+<!-- 読書進捗バー -->
+<div class="bookmark-bar">
+  <span class="progress-text" id="progressText">プロローグ</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <span class="progress-text" id="progressPct">0%</span>
+</div>
+
+<script>
+// 目次スクロール
+function scrollToChapter(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// 読書進捗トラッキング
+const chapters = [
+  { id: 'prologue', label: 'プロローグ' },
+  { id: 'ch1', label: '第一章' },
+  { id: 'ch2', label: '第二章' },
+  { id: 'ch3', label: '第三章' },
+  { id: 'ch4', label: '第四章' },
+  { id: 'ch5', label: '第五章' },
+];
+
+function updateProgress() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docHeight > 0 ? Math.min(100, Math.round(scrollTop / docHeight * 100)) : 0;
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').style.display = pct > 0 ? '' : 'none';
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  // 現在の章を判定
+  let current = chapters[0].label;
+  for (const ch of chapters) {
+    const el = document.getElementById(ch.id);
+    if (el && el.getBoundingClientRect().top <= 120) {
+      current = ch.label;
+    }
+  }
+  document.getElementById('progressText').textContent = current;
+
+  // 目次バーのアクティブ表示
+  document.querySelectorAll('.toc-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', chapters[i] && chapters[i].label === current);
+  });
+}
+
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+</script>
+</body>
+</html>

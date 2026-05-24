@@ -1,0 +1,2321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ラップランド">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%232d4561' width='180' height='180' rx='30'/><text x='90' y='125' text-anchor='middle' font-size='100'>❄️</text></svg>">
+<title>ラップランドの冬 (前編) 国語クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: 'DotGothic16', 'Hiragino Kaku Gothic ProN', sans-serif;
+    background: #5a3a1a;
+    color: #3b2a14;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* === SKY + GROUND === */
+  .scene {
+    background: linear-gradient(180deg, #0d1f3a 0%, #1e4068 18%, #3a7da8 35%, #6fadd0 50%, #b5dce9 58%, #e8f0f5 60%, #cad5dc 100%);
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    border-bottom: 4px solid #8aa0b0;
+  }
+  .scene .clouds {
+    position: absolute; top: 15px; width: 100%;
+  }
+  .cloud {
+    position: absolute;
+    background: #fff;
+    border-radius: 2px;
+    opacity: 0.85;
+  }
+  .cloud1 { width:40px; height:12px; top:10px; left:15%; }
+  .cloud1::after { content:''; position:absolute; background:#fff; width:24px; height:10px; top:-7px; left:8px; border-radius:2px; }
+  .cloud2 { width:50px; height:14px; top:25px; left:60%; }
+  .cloud2::after { content:''; position:absolute; background:#fff; width:30px; height:10px; top:-7px; left:10px; border-radius:2px; }
+  .cloud3 { width:35px; height:10px; top:5px; left:40%; }
+
+
+  .star {
+    position: absolute;
+    color: #fff;
+    font-size: 12px;
+    text-shadow: 0 0 6px #fff, 0 0 10px #4a6b8a;
+    animation: twinkle 2.5s ease-in-out infinite;
+  }
+  .star.s1 { top: 10px; left: 10%; animation-delay: 0s; }
+  .star.s2 { top: 25px; left: 28%; animation-delay: 0.6s; font-size: 9px; }
+  .star.s3 { top: 8px; left: 50%; animation-delay: 1.2s; font-size: 14px; }
+  .star.s4 { top: 30px; left: 72%; animation-delay: 0.3s; }
+  .star.s5 { top: 18px; left: 88%; animation-delay: 1.5s; font-size: 10px; }
+  .moon {
+    position: absolute;
+    top: 12px;
+    right: 18%;
+    width: 22px;
+    height: 22px;
+    background: radial-gradient(circle at 35% 35%, #fff8d4 0%, #f0d878 60%, #d4a838 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 240, 180, 0.8);
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  /* === PIXEL CHARACTERS === */
+  .characters {
+    position: absolute;
+    bottom: 18px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 20px;
+  }
+  .char-container { position: relative; }
+  .char-name {
+    text-align: center;
+    font-size: 11px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333;
+    margin-bottom: 2px;
+    letter-spacing: 1px;
+  }
+  canvas.char-sprite { image-rendering: pixelated; display: block; margin: 0 auto; }
+
+  /* grass blocks */
+  .grass-row {
+    position: absolute; bottom: 0; width: 100%; height: 18px;
+    display: flex;
+  }
+  .grass-block {
+    flex: 1;
+    background: linear-gradient(180deg, #e8f0f5 0%, #e8f0f5 35%, #b5c8d4 35%, #95acb8 100%);
+    border-right: 1px solid #c5d4e0;
+  }
+
+  /* === MAIN CONTENT === */
+  .content {
+    flex: 1;
+    background: #f5e6c8;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 31px, #e8d5a3 31px, #e8d5a3 32px),
+      repeating-linear-gradient(90deg, transparent, transparent 31px, #e8d5a3 31px, #e8d5a3 32px);
+    padding: 16px;
+    position: relative;
+  }
+  .content::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(90deg, #8B6914 0px, #8B6914 15px, #7a5c12 15px, #7a5c12 16px, #8B6914 16px, #8B6914 32px);
+  }
+
+  /* === TITLE SCREEN === */
+  .title-screen {
+    text-align: center;
+    padding-top: 10px;
+  }
+  .title-screen h1 {
+    font-size: 26px;
+    color: #3b2a14;
+    text-shadow: 2px 2px 0 #d4b896;
+    margin-bottom: 8px;
+    letter-spacing: 3px;
+  }
+  .title-screen .subtitle {
+    font-size: 14px;
+    color: #6b5a3a;
+    margin-bottom: 20px;
+  }
+
+  /* === BUTTONS === */
+  .mc-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+    padding: 14px 20px;
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 17px;
+    color: #fff;
+    background: linear-gradient(180deg, #6aaa3a 0%, #4a8a2a 50%, #3d7a1e 100%);
+    border: 3px solid #2d5a0e;
+    border-radius: 4px;
+    box-shadow: inset 0 -3px 0 #2d5a0e, inset 0 3px 0 #7ec050;
+    cursor: pointer;
+    text-shadow: 1px 1px 0 #2d5a0e;
+    letter-spacing: 2px;
+    -webkit-appearance: none;
+  }
+  .mc-btn:active {
+    transform: translateY(2px);
+    box-shadow: inset 0 -1px 0 #2d5a0e, inset 0 3px 0 #7ec050;
+  }
+  .mc-btn.gray {
+    background: linear-gradient(180deg, #8a8a8a 0%, #6a6a6a 50%, #555 100%);
+    border-color: #444;
+    box-shadow: inset 0 -3px 0 #444, inset 0 3px 0 #aaa;
+    text-shadow: 1px 1px 0 #333;
+  }
+  .reread-btn {
+    margin-top: 16px;
+    background: linear-gradient(180deg, #c9a84c 0%, #a88832 50%, #8a6e20 100%);
+    border-color: #6b5518;
+    box-shadow: inset 0 -3px 0 #6b5518, inset 0 3px 0 #e0c060;
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+
+  /* === STORY TEXT === */
+  .story-header {
+    text-align: center;
+    font-size: 14px;
+    color: #6b5a3a;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 2px dashed #cdb98a;
+  }
+  /* スマホでは左カラムの本文を非表示（もういちど読むで読む） */
+  .quiz-landscape .ql-story { display: none; }
+  .quiz-landscape .ql-right { flex: 1; }
+  .quiz-landscape { display: block; }
+  .story-text {
+    font-size: 20px;
+    line-height: 1.85;
+    color: #3b2a14;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.5);
+    border: 2px solid #cdb98a;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    max-height: 50vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* === ふりがなポップアップ === */
+  .kanji-pop {
+    color: inherit;
+    /* border-bottom: 2px dotted #5d8c3e; (下線なし) */
+    cursor: pointer;
+    position: relative;
+    padding: 0 1px;
+  }
+  .kanji-pop.active {
+    background: #fff3d0;
+    border-radius: 3px;
+  }
+  .kanji-pop.active::after {
+    content: attr(data-yomi);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #3b2a14;
+    color: #fff;
+    padding: 5px 12px;
+    font-size: 15px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 100;
+    margin-bottom: 6px;
+    font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-weight: normal;
+  }
+  .kanji-pop.active::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid #3b2a14;
+    z-index: 100;
+  }
+  /* === ふりがなポップアップ上端見切れ対策 (下向き表示) === */
+  .kanji-pop.popup-below.active::after {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: 6px;
+  }
+  .kanji-pop.popup-below.active::before {
+    bottom: auto;
+    top: 100%;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid #3b2a14;
+  }
+
+
+  /* === QUIZ === */
+  .quiz-header {
+    font-size: 15px;
+    color: #8B6914;
+    margin-bottom: 6px;
+  }
+  .quiz-question {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #3b2a14;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.5);
+    border: 2px solid #cdb98a;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .choice-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 15px;
+    color: #3b2a14;
+    background: linear-gradient(180deg, #f5e6c8, #e8d5a3);
+    border: 2px solid #b89a6a;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    -webkit-appearance: none;
+    line-height: 1.5;
+  }
+  .choice-btn:active { background: #e0cda0; }
+  .choice-btn.correct {
+    background: linear-gradient(180deg, #a8e6a0, #7dcc70) !important;
+    border-color: #4a9a3a !important;
+    color: #1a4a10 !important;
+  }
+  .choice-btn.wrong {
+    background: linear-gradient(180deg, #e6a0a0, #cc7070) !important;
+    border-color: #9a3a3a !important;
+    color: #4a1010 !important;
+  }
+  .choice-btn:disabled { opacity: 0.85; }
+
+  /* === RESULT FEEDBACK === */
+  .result-box {
+    padding: 8px 10px;
+    border-radius: 4px;
+    margin: 6px 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .result-box.correct {
+    background: #d4f5d0;
+    border: 2px solid #6abf5a;
+    color: #2a6a1a;
+  }
+  .result-box.wrong {
+    background: #f5d0d0;
+    border: 2px solid #bf5a5a;
+    color: #6a1a1a;
+  }
+
+  /* === PROGRESS BAR === */
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #cdb98a;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    border: 1px solid #b89a6a;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6aaa3a, #4a8a2a);
+    border-radius: 5px;
+    transition: width 0.4s ease;
+  }
+
+  /* === SCORE === */
+  .score-display {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5a3a;
+    margin-bottom: 4px;
+  }
+  .score-display .num { color: #4a8a2a; font-size: 18px; }
+
+  /* === FINAL SCREEN === */
+  .final-score {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .final-score h2 {
+    font-size: 22px;
+    color: #3b2a14;
+    margin-bottom: 16px;
+  }
+  .final-score .big-score {
+    font-size: 48px;
+    color: #4a8a2a;
+    margin: 10px 0;
+  }
+  .final-score .big-score span { font-size: 20px; color: #6b5a3a; }
+  .stars { font-size: 36px; margin: 10px 0; }
+
+  /* === BOUNCE ANIM === */
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .bounce { animation: bounce 0.5s ease; }
+
+  /* speech bubble */
+  .speech {
+    position: absolute;
+    background: #fff;
+    border: 2px solid #3b2a14;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #3b2a14;
+    white-space: nowrap;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 6px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .speech.show { opacity: 1; }
+  .speech::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid #3b2a14;
+  }
+
+  /* === 過去に間違えた選択肢 === */
+  .choice-btn.past-wrong {
+    background: linear-gradient(180deg, #d8cbb5, #c0b092) !important;
+    color: #999 !important;
+    border-color: #a89878 !important;
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  /* === ログ表示 === */
+  .log-summary-box {
+    background: rgba(255,255,255,0.7);
+    border: 2px solid #cdb98a;
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin: 14px auto;
+    max-width: 360px;
+    text-align: left;
+    font-size: 14px;
+    color: #3b2a14;
+  }
+  .log-summary-box h3 { font-size: 16px; margin-bottom: 8px; color: #6b5a3a; }
+  .log-summary-box .log-row { margin: 4px 0; line-height: 1.7; }
+  .log-details {
+    max-width: 420px;
+    margin: 10px auto;
+    text-align: left;
+    font-size: 13px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid #cdb98a;
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: #3b2a14;
+  }
+  .log-details summary {
+    cursor: pointer;
+    padding: 6px 0;
+    font-weight: bold;
+    color: #6b5a3a;
+    font-size: 14px;
+  }
+  .log-section {
+    padding: 8px 0;
+    border-bottom: 1px dashed #cdb98a;
+  }
+  .log-section:last-child { border-bottom: none; }
+  .log-title {
+    font-weight: bold;
+    color: #8B6914;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+  .log-section .log-row {
+    font-size: 12px;
+    color: #6b5a3a;
+    margin: 2px 0;
+  }
+  .log-wrong-item {
+    background: #f5d0d0;
+    padding: 5px 7px;
+    border-radius: 3px;
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .log-q { color: #6a1a1a; font-weight: bold; }
+  .log-a { color: #9a3a3a; margin-top: 2px; }
+  .log-ok-item {
+    color: #2a6a1a;
+    font-size: 12px;
+    margin: 4px 0;
+  }
+
+  /* === iPad 横向き (幅768px以上) === */
+  @media (min-width: 768px) {
+    #app {
+      max-width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .scene {
+      width: 100%;
+      height: 120px;
+      flex-shrink: 0;
+    }
+    .characters { gap: 30px; }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 24px;
+    }
+    /* 2カラム: 本文(左) + クイズ(右) */
+    .quiz-landscape {
+      display: flex !important;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .quiz-landscape .ql-story {
+      display: block !important;
+      flex: 1;
+      min-width: 0;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      font-size: 14px;
+      line-height: 1.75;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.5);
+      border: 2px solid #cdb98a;
+      border-radius: 4px;
+    }
+    .quiz-landscape .ql-right {
+      flex: 1;
+      min-width: 0;
+    }
+    /* 横向きクイズ画面では「もういちど読む」不要（左に常時表示） */
+    .quiz-landscape .reread-btn { display: none; }
+    .story-text {
+      max-height: calc(100vh - 260px);
+    }
+    .mc-btn {
+      padding: 10px 20px;
+      font-size: 15px;
+    }
+    .choice-btn {
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+    .title-screen h1 { font-size: 30px; }
+    .final-score .big-score { font-size: 42px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Scene with characters -->
+  <div class="scene">
+    <div class="clouds">
+      <div class="moon"></div>
+      <div class="star s1">✦</div>
+      <div class="star s2">✧</div>
+      <div class="star s3">✦</div>
+      <div class="star s4">✧</div>
+      <div class="star s5">✦</div>
+    </div>
+    <div class="characters" id="characters"></div>
+    <div class="grass-row" id="grassRow"></div>
+  </div>
+
+  <!-- Content area -->
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ===== FURIGANA DICTIONARY (auto-generated by fugashi+unidic-lite) =====
+const FURIGANA_DICT = {
+  "日": "ひ",
+  "家": "いえ",
+  "地下": "ちか",
+  "何": "なん",
+  "台所": "だいどころ",
+  "茶": "ちゃ",
+  "声": "こえ",
+  "聞こえ": "きこえ",
+  "心配": "しんぱい",
+  "梯子": "はしご",
+  "下り": "おり",
+  "室": "しつ",
+  "散らかっ": "ちらかっ",
+  "関係": "かんけい",
+  "床": "ゆか",
+  "広げ": "ひろげ",
+  "足": "あし",
+  "踏み場": "ふみば",
+  "奥": "おく",
+  "片付け": "かたづけ",
+  "言っ": "いっ",
+  "実験": "じっけん",
+  "用": "よう",
+  "少し": "すこし",
+  "広く": "ひろく",
+  "思っ": "おもっ",
+  "見": "み",
+  "指差し": "ゆびさし",
+  "先": "さき",
+  "大きな": "おおきな",
+  "置い": "おい",
+  "普通": "ふつう",
+  "倍": "ばい",
+  "大き": "おおき",
+  "大きい": "おおきい",
+  "木": "もく",
+  "色": "いろ",
+  "深い": "ふかい",
+  "茶色": "ちゃいろ",
+  "表面": "ひょうめん",
+  "細かい": "こまかい",
+  "彫刻": "ちょうこく",
+  "施さ": "ほどこさ",
+  "蛇": "へび",
+  "模様": "もよう",
+  "葉っぱ": "はっぱ",
+  "文字": "もじ",
+  "刻ま": "きざま",
+  "装飾": "そうしょく",
+  "手": "て",
+  "触れ": "ふれ",
+  "冷たかっ": "つめたかっ",
+  "宝物": "たからもの",
+  "探す": "さがす",
+  "古い": "ふるい",
+  "処分": "しょぶん",
+  "感じ": "かんじ",
+  "予感": "よかん",
+  "冷た": "つめた",
+  "特に": "とくに",
+  "意味": "いみ",
+  "不思議": "ふしぎ",
+  "力": "ちから",
+  "寒": "さむ",
+  "体温": "たいおん",
+  "低い": "ひくい",
+  "感触": "かんしょく",
+  "物": "もの",
+  "夜": "よる",
+  "来": "き",
+  "四": "よん",
+  "人": "にん",
+  "囲ん": "かこん",
+  "蓋": "ふた",
+  "開け": "あけ",
+  "音": "おと",
+  "中": "なか",
+  "空": "そら",
+  "期待": "きたい",
+  "待っ": "まっ",
+  "覗き込ん": "のぞきこん",
+  "底": "そこ",
+  "見え": "みえ",
+  "中身": "なかみ",
+  "一目": "ひとめ",
+  "見える": "みえる",
+  "暗かっ": "くらかっ",
+  "暗": "くら",
+  "奥行き": "おくゆき",
+  "入れ": "いれ",
+  "手のひら": "てのひら",
+  "冷たい": "つめたい",
+  "空気": "くうき",
+  "雪": "ゆき",
+  "引き戻す": "ひきもどす",
+  "縁": "えん",
+  "飛び乗っ": "とびのっ",
+  "迷い": "まよい",
+  "飛び込ん": "とびこん",
+  "白い": "しろい",
+  "体": "からだ",
+  "吸い込ま": "すいこま",
+  "消え": "きえ",
+  "水": "みず",
+  "毛皮": "けがわ",
+  "熱い": "あつい",
+  "砂": "すな",
+  "書か": "かか",
+  "存在": "そんざい",
+  "考え": "かんがえ",
+  "言う": "ゆう",
+  "聞か": "きか",
+  "犬": "いぬ",
+  "考える": "かんがえる",
+  "動く": "うごく",
+  "性格": "せいかく",
+  "知っ": "しっ",
+  "特別": "とくべつ",
+  "遊ぶ": "あそぶ",
+  "飽き": "あき",
+  "書き": "かき",
+  "方": "かた",
+  "自分": "じぶん",
+  "伝わり": "つたわり",
+  "叫ん": "さけん",
+  "立ち昇っ": "たちのぼっ",
+  "行く": "いく",
+  "行っ": "おこなっ",
+  "掴ん": "つかん",
+  "入っ": "はいっ",
+  "落ち": "おち",
+  "次": "つぎ",
+  "瞬間": "しゅんかん",
+  "上": "うえ",
+  "目": "め",
+  "頬": "ほお",
+  "起き上がっ": "おきあがっ",
+  "白かっ": "しろかっ",
+  "地面": "じめん",
+  "降っ": "ふっ",
+  "頭": "あたま",
+  "肩": "かた",
+  "積もる": "つもる",
+  "格好": "かっこう",
+  "外": "そと",
+  "出る": "でる",
+  "準備": "じゅんび",
+  "出": "で",
+  "場所": "ばしょ",
+  "暑い": "あつい",
+  "砂漠": "さばく",
+  "降る": "ふる",
+  "世界": "せかい",
+  "海": "うみ",
+  "見せ": "みせ",
+  "大切": "たいせつ",
+  "安全": "あんぜん",
+  "手伝う": "てつだう",
+  "助け": "たすけ",
+  "一心": "いっしん",
+  "危ない": "あぶない",
+  "思い": "おもい",
+  "強": "つよ",
+  "身": "み",
+  "縮め": "ちぢめ",
+  "呼ん": "よん",
+  "遠く": "とおく",
+  "短い": "みじかい",
+  "吠え声": "ほえごえ",
+  "積もっ": "つもっ",
+  "針葉": "しんよう",
+  "樹": "じゅ",
+  "森": "もり",
+  "毛並み": "けなみ",
+  "鳴い": "ない",
+  "走っ": "はしっ",
+  "取ら": "とら",
+  "度": "ど",
+  "転び": "ころび",
+  "着く": "つく",
+  "抱きつい": "だきつい",
+  "生き": "いき",
+  "元気": "げんき",
+  "二人": "ふたり",
+  "姿": "すがた",
+  "続い": "つづい",
+  "似": "に",
+  "深く": "ふかく",
+  "静か": "しずか",
+  "違っ": "ちがっ",
+  "風": "かぜ",
+  "揺れ": "ゆれ",
+  "旗": "はた",
+  "雲": "くも",
+  "動い": "うごい",
+  "止まっ": "とまっ",
+  "垂直": "すいちょく",
+  "歩く": "あるく",
+  "松明": "たいまつ",
+  "一": "いち",
+  "本": "ほん",
+  "立っ": "たっ",
+  "誰": "だれ",
+  "鉄": "てつ",
+  "長い": "ながい",
+  "柱": "はしら",
+  "立て": "たて",
+  "取り付け": "とりつけ",
+  "背丈": "せたけ",
+  "三": "みっ",
+  "違う": "ちがう",
+  "光": "ひかり",
+  "動か": "うごか",
+  "不": "ふ",
+  "気味": "きみ",
+  "静けさ": "しずけさ",
+  "自然": "しぜん",
+  "灯り": "あかり",
+  "生き物": "いきもの",
+  "手がかり": "てがかり",
+  "魔法": "まほう",
+  "燃え": "もえ",
+  "攻撃": "こうげき",
+  "罠": "わな",
+  "意図": "いと",
+  "住む": "すむ",
+  "者": "もの",
+  "足元": "あしもと",
+  "足跡": "あしあと",
+  "形": "かたち",
+  "変": "へん",
+  "全体": "ぜんたい",
+  "的": "てき",
+  "小さい": "ちいさい",
+  "子ども": "こども",
+  "指": "ゆび",
+  "少なく": "すくなく",
+  "動物": "どうぶつ",
+  "追っ": "おっ",
+  "歩き": "あるき",
+  "始め": "はじめ",
+  "積もり": "つもり",
+  "変わっ": "かわっ",
+  "小道": "こみち",
+  "道": "みち",
+  "小さな": "ちいさな",
+  "小屋": "こや",
+  "煙突": "えんとつ",
+  "細い": "ほそい",
+  "煙": "けむり",
+  "立ち上っ": "たちのぼっ",
+  "窓": "まど",
+  "扉": "とびら",
+  "開い": "ひらい",
+  "人間": "にんげん",
+  "肌": "はだ",
+  "突き出": "つきで",
+  "鼻": "はな",
+  "金色": "きんいろ",
+  "住ん": "すん",
+  "首元": "くびもと",
+  "留まっ": "とまっ",
+  "首": "くび",
+  "赤い": "あかい",
+  "重": "じゅう",
+  "巻い": "まい",
+  "傘": "かさ",
+  "持っ": "もっ",
+  "気づい": "きづい",
+  "固まっ": "かたまっ",
+  "答える": "こたえる",
+  "慌て": "あわて",
+  "押し込ん": "おしこん",
+  "本文": "ほんぶん",
+  "黒い": "くろい",
+  "長靴": "ながぐつ",
+  "必死": "ひっし",
+  "守っ": "まもっ",
+  "様子": "ようす",
+  "来る": "くる",
+  "使い": "つかい",
+  "教え": "おしえ",
+  "自慢": "じまん",
+  "言い": "いい",
+  "起きる": "おきる",
+  "全然": "ぜんぜん",
+  "暖炉": "だんろ",
+  "部屋": "へや",
+  "温かい": "あたたかい",
+  "包ま": "つつま",
+  "引い": "ひい",
+  "壁": "かべ",
+  "一面": "いちめん",
+  "本棚": "ほんだな",
+  "並ん": "ならん",
+  "明らか": "あきらか",
+  "読ま": "よま",
+  "跡": "あと",
+  "申し": "もうし",
+  "遅れ": "おくれ",
+  "振り返っ": "ふりかえっ",
+  "辞儀": "じぎ",
+  "私": "わたくし",
+  "一口": "ひとくち",
+  "飲ん": "のん",
+  "温かく": "あたたかく",
+  "甘く": "あまく",
+  "お腹": "おなか",
+  "染み": "しみ",
+  "渡っ": "わたっ",
+  "別": "べつ",
+  "鏡": "かがみ",
+  "井戸": "いど",
+  "通っ": "とおっ",
+  "千": "せん",
+  "年": "ねん",
+  "寒い": "さむい",
+  "昔": "むかし",
+  "四季": "しき",
+  "春": "はる",
+  "夏": "なつ",
+  "秋": "あき",
+  "冬": "ふゆ",
+  "今": "いま",
+  "百": "ひゃく",
+  "氷": "こおり",
+  "女王": "じょおう",
+  "支配": "しはい",
+  "降り": "おり",
+  "続け": "つづけ",
+  "決して": "けっして",
+  "間": "あいだ",
+  "十": "じゅう",
+  "五十": "ごじゅう",
+  "期間": "きかん",
+  "描写": "びょうしゃ",
+  "人物": "じんぶつ",
+  "集める": "あつめる",
+  "好き": "すき",
+  "飾っ": "かざっ",
+  "勉強": "べんきょう",
+  "読ん": "よん",
+  "知識": "ちしき",
+  "飾り": "かざり",
+  "本当": "ほんとう",
+  "戦士": "せんし",
+  "前": "まえ",
+  "住人": "じゅうにん",
+  "残し": "のこし",
+  "本人": "ほんにん",
+  "字": "じ",
+  "読め": "よめ",
+  "開か": "ひらか",
+  "自身": "じしん",
+  "緋色": "ひいろ",
+  "家族": "かぞく",
+  "迷い込ん": "まよいこん",
+  "帰り": "かえり",
+  "冊": "さつ",
+  "取り出し": "とりだし",
+  "読み": "よみ",
+  "読み上げ": "よみあげ",
+  "土": "つち",
+  "踏む": "ふむ",
+  "終わる": "おわる",
+  "溶け": "とけ",
+  "訪れる": "おとずれる",
+  "恐れ": "おそれ",
+  "国": "くに",
+  "密告": "みっこく",
+  "放っ": "はなっ",
+  "顔": "かお",
+  "伏せ": "ふせ",
+  "見つけ": "みつけ",
+  "報告": "ほうこく",
+  "命令": "めいれい",
+  "逆らえ": "さからえ",
+  "帰り道": "かえりみち",
+  "永遠": "えいえん",
+  "閉ざす": "とざす",
+  "脅さ": "おどさ",
+  "涙": "なみだ",
+  "同じ": "おなじ",
+  "不安": "ふあん",
+  "内容": "ないよう",
+  "命": "いのち",
+  "奪う": "うばう",
+  "燃やす": "もやす",
+  "埋める": "うめる",
+  "決め": "きめ",
+  "気持ち": "きもち",
+  "嫌い": "きらい",
+  "震える": "ふるえる",
+  "見捨て": "みすて",
+  "会え": "あえ",
+  "予言": "よげん",
+  "試し": "ためし",
+  "思う": "おもう",
+  "利用": "りよう",
+  "立ち上がっ": "たちあがっ",
+  "帰れ": "かえれ",
+  "笑っ": "わらっ",
+  "哀し": "かなし",
+  "笑い": "わらい",
+  "覚え": "おぼえ",
+  "朽ちる": "くちる",
+  "定め": "さだめ",
+  "促し": "うながし",
+  "終わっ": "おわっ",
+  "一緒": "いっしょ",
+  "帰る": "かえる",
+  "方法": "ほうほう",
+  "探し": "さがし",
+  "見開い": "みひらい",
+  "今度": "こんど",
+  "嬉し": "うれし",
+  "言葉": "ことば",
+  "歩い": "あるい",
+  "白く": "しろく",
+  "止ま": "やま",
+  "胸": "むね",
+  "残っ": "のこっ",
+  "約束": "やくそく",
+  "倒す": "たおす",
+  "仲間": "なかま",
+  "集め": "あつめ",
+  "全部": "ぜんぶ",
+  "認め": "みとめ",
+  "未来": "みらい",
+  "出会え": "であえ",
+  "茶代": "ちゃだい",
+  "払っ": "はらっ",
+  "買っ": "かっ",
+  "雪国": "ゆきぐに",
+  "閉じ込め": "とじこめ",
+  "孤独": "こどく",
+  "暮らし": "くらし",
+  "差し": "さし",
+  "時間": "じかん",
+  "急": "きゅう",
+  "立ち止まっ": "たちどまっ",
+  "耳": "みみ",
+  "岩": "いわ",
+  "出し": "だし",
+  "北極": "ほっきょく",
+  "子": "こ",
+  "二": "に",
+  "喋っ": "しゃべっ",
+  "無事": "ぶじ",
+  "名前": "なまえ",
+  "伝書": "でんしょ",
+  "連絡": "れんらく",
+  "最初": "さいしょ",
+  "反対": "はんたい",
+  "派": "は",
+  "使っ": "つかっ",
+  "網": "もう",
+  "盗ん": "ぬすん",
+  "夫妻": "ふさい",
+  "半分": "はんぶん",
+  "埋もれ": "うずもれ",
+  "丸い": "まるい",
+  "暖かかっ": "あたたかかっ",
+  "椅子": "いす",
+  "飛び上がっ": "とびあがっ",
+  "聞い": "きい",
+  "首輪": "くびわ",
+  "書い": "かい",
+  "取り合っ": "とりあっ",
+  "再会": "さいかい",
+  "赤かっ": "あかかっ",
+  "表れ": "あらわれ",
+  "痛かっ": "いたかっ",
+  "仲": "なか",
+  "擦っ": "すっ",
+  "泣き": "なき",
+  "怒っ": "おこっ",
+  "感情": "かんじょう",
+  "出す": "だす",
+  "心": "こころ",
+  "食事": "しょくじ",
+  "匹": "ひき",
+  "限る": "かぎる",
+  "立派": "りっぱ",
+  "旅": "たび",
+  "一人": "ひとり",
+  "戦う": "たたかう",
+  "正しく": "ただしく",
+  "黙っ": "だまっ",
+  "終わら": "おわら",
+  "思え": "おもえ",
+  "良い": "よい",
+  "指摘": "してき",
+  "通り": "とおり",
+  "会い": "あい",
+  "真": "しん",
+  "王": "おう",
+  "下": "した",
+  "古く": "ふるく",
+  "旦那": "だんな",
+  "中心": "ちゅうしん",
+  "凍っ": "こおっ",
+  "湖": "こ",
+  "夢": "ゆめ",
+  "青い": "あおい",
+  "気": "き",
+  "答え": "こたえ",
+  "思いつき": "おもいつき",
+  "面白かっ": "おもしろかっ",
+  "大事": "だいじ",
+  "点": "てん",
+  "言い当て": "いいあて",
+  "扱い": "あつかい",
+  "大声": "おおごえ",
+  "抵抗": "ていこう",
+  "現実": "げんじつ",
+  "先回り": "さきまわり",
+  "会わ": "あわ",
+  "話": "はなし",
+  "朝": "あさ",
+  "起こし": "おこし",
+  "馬車": "ばしゃ",
+  "方向": "ほうこう",
+  "向かっ": "むかっ",
+  "三十": "さんじゅう",
+  "分": "ふん",
+  "以内": "いない",
+  "急い": "いそい",
+  "支度": "したく",
+  "東": "ひがし",
+  "鈴": "すず",
+  "群れ": "むれ",
+  "六": "ろく",
+  "滑る": "すべる",
+  "女": "おんな",
+  "背": "せ",
+  "高く": "たかく",
+  "痩せ": "やせ",
+  "銀色": "ぎんいろ",
+  "髪": "かみ",
+  "純白": "じゅんぱく",
+  "銀": "ぎん",
+  "王冠": "おうかん",
+  "見回し": "みまわし",
+  "最後": "さいご",
+  "微笑ん": "ほほえん",
+  "子供": "こども",
+  "馬": "うま",
+  "像": "ぞう",
+  "一番": "いちばん",
+  "高かっ": "たかかっ",
+  "賢": "かしこ",
+  "狙い": "ねらい",
+  "挙げ": "あげ",
+  "話しかけ": "はなしかけ",
+  "差し出し": "さしだし",
+  "賢い": "かしこい",
+  "選ん": "えらん",
+  "狙っ": "ねらっ",
+  "盆": "ぼん",
+  "乗っ": "のっ",
+  "革": "かわ",
+  "表紙": "ひょうし",
+  "伝わる": "つたわる",
+  "古": "いにしえ",
+  "書": "しょ",
+  "究極": "きゅうきょく",
+  "理論": "りろん",
+  "構造": "こうぞう",
+  "秘密": "ひみつ",
+  "釘付け": "くぎづけ",
+  "理解": "りかい",
+  "他": "た",
+  "選ば": "えらば",
+  "冒険": "ぼうけん",
+  "連れ回さ": "つれまわさ",
+  "震え": "ふるえ",
+  "宝石": "ほうせき",
+  "押し付け": "おしつけ",
+  "試食": "ししょく",
+  "今夜": "こんや",
+  "城": "しろ",
+  "内緒": "ないしょ",
+  "学べ": "まなべ",
+  "乗り込ん": "のりこん",
+  "鳴らし": "ならし",
+  "雪原": "せつげん",
+  "向こう": "むこう",
+  "握ら": "にぎら",
+  "握っ": "にぎっ",
+  "離さ": "はなさ",
+  "連れ": "つれ",
+  "迎え": "むかえ",
+  "行か": "いか",
+  "明日": "あす",
+  "切り離そう": "きりはなそう",
+  "将来": "しょうらい",
+  "優しい": "やさしい",
+  "忠告": "ちゅうこく",
+  "持ち上げ": "もちあげ",
+  "引き離そう": "ひきはなそう",
+  "悪意": "あくい",
+  "乗せ": "のせ",
+  "願い": "ねがい",
+  "作ろう": "つくろう",
+  "会っ": "あっ",
+  "喋ら": "しゃべら",
+  "隣": "となり",
+  "大丈夫": "だいじょうぶ",
+  "渡し": "わたし",
+  "言わ": "いわ",
+  "弱い": "よわい",
+  "仕方": "しかた",
+  "興味": "きょうみ",
+  "止め": "とめ",
+  "爆発": "ばくはつ",
+  "新しい": "あたらしい",
+  "回路": "かいろ",
+  "危険": "きけん",
+  "済ま": "すま",
+  "事件": "じけん",
+  "出来事": "できごと",
+  "悪く": "わるく",
+  "練習": "れんしゅう",
+  "凍ら": "こおら",
+  "寝込ん": "ねこん",
+  "弟": "おとうと",
+  "止めれ": "とめれ",
+  "分から": "わから",
+  "手伝っ": "てつだっ",
+  "取り上げる": "とりあげる",
+  "分かっ": "わかっ",
+  "着い": "つい",
+  "巨大": "きょだい",
+  "円形": "えんけい",
+  "地平": "ちへい",
+  "線": "せん",
+  "届く": "とどく",
+  "覆わ": "おおわ",
+  "薄く": "うすく",
+  "青み": "あおみ",
+  "透明": "とうめい",
+  "映し": "うつし",
+  "真ん中": "まんなか",
+  "島": "しま",
+  "石": "いし",
+  "祭壇": "さいだん",
+  "建っ": "たっ",
+  "近づい": "ちかづい",
+  "叩い": "たたい",
+  "起こら": "おこら",
+  "広がり": "ひろがり",
+  "大きく": "おおきく",
+  "青く": "あおく",
+  "光っ": "ひかっ",
+  "影": "かげ",
+  "光る": "ひかる",
+  "触手": "しょくしゅ",
+  "周り": "まわり",
+  "広がっ": "ひろがっ",
+  "見上げ": "みあげ",
+  "怖く": "こわく",
+  "強く": "つよく",
+  "見守っ": "みまもっ",
+  "響い": "ひびい",
+  "口": "くち",
+  "直接": "ちょくせつ",
+  "名": "な",
+  "長く": "ながく",
+  "信頼": "しんらい",
+  "食べよう": "たべよう",
+  "敵": "てき",
+  "手下": "てした",
+  "反し": "はんし",
+  "味方": "みかた"
+};
+const FURIGANA_KEYS = Object.keys(FURIGANA_DICT).sort((a, b) => b.length - a.length);
+
+function applyFurigana(text) {
+  // text中の辞書単語をspanで置き換える。タグは壊さない想定（<br>を含む可能性あり）
+  // <br> タグを一時マーカーに置換してから処理
+  const BR_MARK = "\u0001BR\u0001";
+  let t = text.replace(/<br>/g, BR_MARK);
+  let result = "";
+  let i = 0;
+  while (i < t.length) {
+    // マーカーを先にチェック
+    if (t.startsWith(BR_MARK, i)) { result += "<br>"; i += BR_MARK.length; continue; }
+    let matched = false;
+    for (const key of FURIGANA_KEYS) {
+      if (t.startsWith(key, i)) {
+        const yomi = FURIGANA_DICT[key];
+        result += `<span class="kanji-pop" data-yomi="${yomi}">${key}</span>`;
+        i += key.length;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      // HTML エスケープは必要最小限（< > & のみ）
+      const ch = t[i];
+      result += ch === "<" ? "&lt;" : ch === ">" ? "&gt;" : ch === "&" ? "&amp;" : ch;
+      i++;
+    }
+  }
+  return result;
+}
+
+// ===== PIXEL ART CHARACTERS =====
+const SPRITES = {
+  yuuki: { // Alex-style female
+    width: 12, height: 20,
+    pixels: [
+      '..OOOOOO....',
+      '..OOOOOO....',
+      '.OOOOOOOO...',
+      '.OSSSSSSOO..',
+      '.OSSEESESO..',
+      '..SSSSSS....',
+      '..SSMMSS....',
+      '...GGGG.....',
+      '..GGGGGG....',
+      '..GSGGSG....',
+      '..GSGGSG....',
+      '..GGGGGG....',
+      '..SGGGSS....',
+      '...BBBB.....',
+      '...BBBB.....',
+      '...BBBB.....',
+      '...B..B.....',
+      '...B..B.....',
+      '..DD..DD....',
+      '..DD..DD....',
+    ],
+    colors: { O:'#C26216', S:'#D4A574', E:'#3B2A14', M:'#C27070', G:'#8a4ec2', B:'#5a3aa0', D:'#3a2a70' }
+  },
+  kent: { // Steve-style male
+    width: 12, height: 20,
+    pixels: [
+      '..BBBBBB....',
+      '..BBBBBB....',
+      '..BBBBBB....',
+      '.BSSSSSSB...',
+      '.BSSEESSB...',
+      '..SSSSSS....',
+      '..SSMMSS....',
+      '...CCCC.....',
+      '..CCCCCC....',
+      '..CSCCSC....',
+      '..CSCCSC....',
+      '..CCCCCC....',
+      '..SCCCCS....',
+      '...IIII.....',
+      '...IIII.....',
+      '...IIII.....',
+      '...I..I.....',
+      '...I..I.....',
+      '..DD..DD....',
+      '..DD..DD....',
+    ],
+    colors: { B:'#3a1a4a', S:'#D4A574', E:'#3B2A14', M:'#B0785A', C:'#6a2aaa', I:'#2a1a5a', D:'#3a1a4a' }
+  },
+  yuna: { // Friend, energetic girl with lapis-colored coat
+    width: 12, height: 20,
+    pixels: [
+      '..TTTTTT....',
+      '..TTTTTT....',
+      '.TTTTTTTT...',
+      '.TSSSSSSTT..',
+      '.TSSEESESS..',
+      '..SSSSSS....',
+      '..SSMMSS....',
+      '...LLLL.....',
+      '..LLLLLL....',
+      '..LSLLSL....',
+      '..LSLLSL....',
+      '..LLLLLL....',
+      '..SLLLLS....',
+      '...JJJJ.....',
+      '...JJJJ.....',
+      '...JJJJ.....',
+      '...J..J.....',
+      '...J..J.....',
+      '..KK..KK....',
+      '..KK..KK....',
+    ],
+    colors: { T:'#8b5a2b', S:'#D4A574', E:'#3B2A14', M:'#C27070', L:'#3a78c8', J:'#1a3050', K:'#3a2410' }
+  },
+  don: { // White wolf, horizontal
+    width: 18, height: 12,
+    pixels: [
+      '..................',
+      '..WW........WW....',
+      '..WWW......WWW....',
+      '...WWWWWWWWWW.....',
+      '...WEEWWWEEW......',
+      '...WWWWWWWWW......',
+      '....WWNWWW........',
+      '...RRRRRRRRRR.....',
+      '..WWWWWWWWWWWWW...',
+      '..WWWWWWWWWWWWWW..',
+      '..W..WWWWWWW..WW..',
+      '..W..W.....W..W...',
+    ],
+    colors: { W:'#F0F0F0', E:'#2a2a2a', N:'#555', R:'#CC3333' }
+  }
+};
+
+function drawSprite(canvasId, spriteName, scale) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const sprite = SPRITES[spriteName];
+  const s = scale || 3;
+  canvas.width = sprite.width * s;
+  canvas.height = sprite.height * s;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  sprite.pixels.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const c = row[x];
+      if (c !== '.' && sprite.colors[c]) {
+        ctx.fillStyle = sprite.colors[c];
+        ctx.fillRect(x * s, y * s, s, s);
+      }
+    }
+  });
+}
+
+// ===== GRASS BLOCKS =====
+function buildGrass() {
+  const row = document.getElementById('grassRow');
+  for (let i = 0; i < 30; i++) {
+    const b = document.createElement('div');
+    b.className = 'grass-block';
+    row.appendChild(b);
+  }
+}
+
+// ===== CHARACTER DISPLAY =====
+function buildCharacters() {
+  const container = document.getElementById('characters');
+  container.innerHTML = `
+    <div class="char-container" id="charYuuki">
+      <div class="speech" id="speechYuuki"></div>
+      <div class="char-name">ユウキ</div>
+      <canvas class="char-sprite" id="canvasYuuki"></canvas>
+    </div>
+    <div class="char-container" id="charYuna">
+      <div class="speech" id="speechYuna"></div>
+      <div class="char-name">ユナ</div>
+      <canvas class="char-sprite" id="canvasYuna"></canvas>
+    </div>
+    <div class="char-container" id="charDon">
+      <div class="speech" id="speechDon"></div>
+      <div class="char-name">ドン</div>
+      <canvas class="char-sprite" id="canvasDon"></canvas>
+    </div>
+    <div class="char-container" id="charKent">
+      <div class="speech" id="speechKent"></div>
+      <div class="char-name">ケント</div>
+      <canvas class="char-sprite" id="canvasKent"></canvas>
+    </div>
+  `;
+  drawSprite('canvasYuuki', 'yuuki', 3);
+  drawSprite('canvasYuna', 'yuna', 3);
+  drawSprite('canvasDon', 'don', 3);
+  drawSprite('canvasKent', 'kent', 3);
+}
+
+function showSpeech(charId, text, duration) {
+  const el = document.getElementById('speech' + charId);
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration || 2500);
+}
+
+// ===== QUIZ DATA =====
+const sections = [
+  {
+    "title": "プロローグ①「地下室のチェスト」",
+    "text": "　その日、ユウキの家の地下では、ケントが何かをやっていた。\n　ユウキは台所でお茶をいれていたけれど、地下からときどき「あれ？」とか「あ、これか」とか、ぶつぶつ声が聞こえてくるので、心配になって梯子を下りた。\n　地下室は、いつものように散らかっていた。ケントのレッドストーン関係のものが床に広げられていて、足の踏み場もない。\n「ケント、何してるの」\n「奥のほう、片付けてた」とケントは言った。「実験用のスペースをもう少し広くしようかと思って。そしたらさ、見て、ユウキ」\n　ケントが指差した先に——大きなチェストが置いてあった。普通のチェストの倍くらいの大きさ。ダブルチェストよりも、もっと大きい。木の色が深い茶色で、表面に細かい彫刻が施されていた。蛇のような模様、葉っぱのような模様、見たことのない文字のような模様が、びっしりと刻まれている。マイクラのチェストには、こんな装飾はない。\n　ユウキはしゃがんで、チェストに手を触れた。ひんやりと冷たかった。",
+    "questions": [
+      {
+        "q": "ケントが地下室を片付けていたのは、何のためでしたか？",
+        "choices": [
+          "ユウキにほめられたかったから",
+          "実験用のスペースを広くするため",
+          "宝物を探すため",
+          "古いチェストを処分するため"
+        ],
+        "answer": 1,
+        "explanation": "ケントは「実験用のスペースをもう少し広くしようかと思って」と言っています。"
+      },
+      {
+        "q": "ユウキがチェストに触れて「ひんやりと冷たかった」と感じたところは、何を予感させますか？",
+        "choices": [
+          "ただの古い木の冷たさで、特に意味はない",
+          "ふつうのマイクラのチェストとはちがう、何か不思議な力があること",
+          "地下室が寒すぎること",
+          "ケントの体温が低いこと"
+        ],
+        "answer": 1,
+        "explanation": "見たことのない彫刻、不思議な冷たさ。マイクラのチェストにはないはずの感触が、これがふつうではない物だと予感させます。"
+      }
+    ]
+  },
+  {
+    "title": "プロローグ②「ドンが吸い込まれた」",
+    "text": "　その夜、ユナとドンがユウキの家に来た。四人で——ユウキ、ケント、ユナ、ドン——チェストを囲んだ。\n　ケントが蓋を開けた。ぎい、という低い音がした。中は——空だった。\n「なんもないじゃん」とユナが言った。「期待したのに」\n「待って」とユウキが言った。ユウキは中を覗き込んだ。空ではあるんだけれど、何かがおかしかった。チェストの底が、見えなかった。ふつう、ダブルチェストの中身は底まで一目で見える。でもこのチェストは——底が、暗かった。ただの暗さじゃない。深い、奥行きのある暗さ。\n　ユウキはチェストの中に、そっと手を入れた。手のひらに——冷たい空気が触れた。雪のにおいがした。\n　ユウキが手を引き戻すより先に——ドンが、チェストの縁に飛び乗った。そして、迷いなく、中に飛び込んだ。\n「ドン！」\n　ドンの白い体が、チェストの底に吸い込まれて——消えた。",
+    "questions": [
+      {
+        "q": "ユウキがチェストの中に手を入れたとき、手のひらに感じたものは何でしたか？",
+        "choices": [
+          "ぬるい水",
+          "ふわふわの毛皮",
+          "冷たい空気と雪のにおい",
+          "熱い砂"
+        ],
+        "answer": 2,
+        "explanation": "「手のひらに——冷たい空気が触れた。雪のにおいがした」と書かれています。"
+      },
+      {
+        "q": "ドンが「迷いなく」チェストに飛び込んだことから、ドンはどんな存在だと考えられますか？",
+        "choices": [
+          "ふだんから人の言うことを聞かない、わがままな犬",
+          "考えるより先に体が動く、まっすぐな性格の犬",
+          "チェストの中身を知っていた特別な犬",
+          "ユウキたちと遊ぶのに飽きていた犬"
+        ],
+        "answer": 1,
+        "explanation": "「迷いなく」飛び込んだという書き方から、ためらわずに自分の感じたまま動く、まっすぐな性格が伝わります。"
+      }
+    ]
+  },
+  {
+    "title": "プロローグ③「ユウキも行く」",
+    "text": "「ドン！　ドン！」\n　ユウキは叫んで、チェストの中を覗き込んだ。底には何もなかった。ドンは、いない。雪のにおいだけが、ふわりと立ち昇った。\n「行く」とユウキが言った。\n「え、まじで？」とユナが言った。\n「ドンが行ったんだもん」\n　ユウキはチェストの縁を掴んで、ためらわずに中に入った。体が、すうっと落ちていった。\n　次の瞬間——ユウキは、雪の上にいた。\n　目を開けたとき、頬に冷たいものが触れていた。ユウキは起き上がった。白かった。どこを見ても、白かった。空も白い。地面も白い。木も、白い雪をかぶっていた。ふわふわと雪が降っていて、頭にも肩にも、すぐに積もる。\n　ユウキはエプロンドレスのままだった。家にいるときの格好で、外に出る準備なんてしていなかった。",
+    "questions": [
+      {
+        "q": "チェストから出てきたユウキは、どんな場所にいましたか？",
+        "choices": [
+          "暑い砂漠",
+          "雪が降る、白い世界",
+          "ジャングルの中",
+          "海の底"
+        ],
+        "answer": 1,
+        "explanation": "「どこを見ても、白かった。空も白い。地面も白い」「ふわふわと雪が降っていて」と書かれています。"
+      },
+      {
+        "q": "ユウキがユナに「ドンが行ったんだもん」と言って、ためらわず飛び込んだのは、なぜですか？",
+        "choices": [
+          "ユナにかっこいいところを見せたかったから",
+          "大切なドンを置いていくことができなかったから",
+          "チェストの中が安全だと知っていたから",
+          "ケントの実験を手伝うためだったから"
+        ],
+        "answer": 1,
+        "explanation": "ドンを助けたい一心で、危ないかどうかも考えずに飛び込んでいます。ドンへの思いの強さが伝わります。"
+      }
+    ]
+  },
+  {
+    "title": "第一章①「白いオオカミと松明」",
+    "text": "　ユウキは寒さに身を縮めながら、ドンを呼んだ。\n「ドン！」\n　遠くで——わん、と短い吠え声がした。雪の積もった針葉樹の森の中、白い毛並みが見えた。ドンが、こっちを見て、また鳴いた。ユウキは走った。雪に足を取られて、何度も転びそうになった。でも走った。ドンに着くと、抱きついた。ドンは生きていた。元気そうだった。\n　ケントは？　ユナは？　二人の姿は、どこにもなかった。\n　針葉樹の森が、どこまでも続いていた。マイクラのタイガバイオームに少し似ているけれど、もっと深くて、静かで——そして、空気が違った。風がない。マイクラの世界はいつも風があった。葉っぱが揺れたり、旗がはためいたり、雲が動いたり。でもここの空気は、止まっていた。雪だけが、垂直に落ちてきていた。\n　森を歩くと、すぐにそれが見えた。松明だった。マイクラの松明が、雪の中にぽつんと一本、立っていた。誰かが鉄でできた長い柱を立てて、その上に松明を取り付けた、というような感じだった。背丈は、ユウキの三倍くらい。",
+    "questions": [
+      {
+        "q": "ユウキがこの雪の世界で「マイクラのタイガと違う」と感じたのは、何がないからでしたか？",
+        "choices": [
+          "雪",
+          "風",
+          "木",
+          "光"
+        ],
+        "answer": 1,
+        "explanation": "「風がない」「ここの空気は、止まっていた」と書かれています。葉っぱも旗も雲も動かない、不気味な静けさです。"
+      },
+      {
+        "q": "森の中にぽつんと立っていた松明は、ユウキにとって何を意味していると考えられますか？",
+        "choices": [
+          "自然にできたただの灯り",
+          "誰かが立てた——つまり、ここに人や生き物がいるという手がかり",
+          "魔法でひとりでに燃えているもの",
+          "ユウキを攻撃するための罠"
+        ],
+        "answer": 1,
+        "explanation": "鉄の柱の上に取り付けられているということは、誰かが意図して立てたということ。ラップランドに住む者がいる手がかりになります。"
+      }
+    ]
+  },
+  {
+    "title": "第一章②「足跡と小屋のピグリン」",
+    "text": "　松明の足元に、誰かの足跡があった。ふつうの足跡じゃなかった。形が、変だった。全体的に小さい。子どもくらいの大きさ。でも形が——足の指が、人より少なくて、まるで動物の足のような。\n「だれか、いたんだ」\n　ドンと二人で、足跡を追って歩き始めた。やがて、雪の積もり方が変わってきた。開けた場所に出て、地面に小道のようなものが見える。道の先に——小さな小屋が見えた。煙突から細い煙が立ち上っていた。窓に、オレンジ色の光がともっている。\n　そのとき、小屋の扉が、ぎいい、と開いた。\n　出てきたのは——人間ではなかった。ピグリンだった。ピンク色の肌、突き出た鼻、金色の小さな目。マイクラのネザーに住んでいるはずのピグリン。でもふつうのピグリンとは、ぜんぜん違った。首元までボタンの留まった、グレーのコート。首には赤いマフラーを、何重にも巻いている。手に大きな傘を持っていた。\n　そのピグリンは、ユウキとドンに気づいた。ぴしっと、固まった。\n「……あの」とピグリンが言った。「人間、ですか？」\n　ユウキが「はい」と答えると、ピグリンは慌てた。「いけない、いけない、いけない」「人間が、ここに来てしまった。なんてことだ」\n　ピグリンは、傘でぐいぐいと、ユウキとドンを小屋の中へ押し込んだ。",
+    "questions": [
+      {
+        "q": "ピグリンが身につけていたものとして、本文に書かれていないのはどれですか？",
+        "choices": [
+          "グレーのコート",
+          "赤いマフラー",
+          "大きな傘",
+          "黒い長靴"
+        ],
+        "answer": 3,
+        "explanation": "コート、マフラー、傘は本文に出てきますが、長靴は書かれていません。雪の中で必死に身を守っている様子が伝わります。"
+      },
+      {
+        "q": "ピグリンが「いけない、いけない」と慌てて、すぐにユウキを小屋に押し込んだのは、なぜだと考えられますか？",
+        "choices": [
+          "人間が来るのが、よくないことだとわかっていたから",
+          "ユウキとドンが寒そうで、かわいそうだったから",
+          "傘の使い方を教えたかったから",
+          "自分の家を自慢したかったから"
+        ],
+        "answer": 0,
+        "explanation": "「人間が、ここに来てしまった。なんてことだ」と言いながら慌てています。誰かに見られるとまずいことが起きると、ピグリンは知っているのです。"
+      }
+    ]
+  },
+  {
+    "title": "第二章①「ラップランドと百年の冬」",
+    "text": "　小屋の中は、外と全然違った。暖炉がぱちぱちと音を立てて燃えていて、部屋全体が温かい光に包まれていた。何より目を引いたのは——壁一面の本棚だった。たくさんの本が並んでいて、明らかに何度も読まれた跡があった。\n「申し遅れました」ピグリンは振り返って、ぺこっとお辞儀をした。「私、トゥントゥンと申します。この森に住んでおります」\n　ユウキはお茶を一口飲んだ。温かくて、ほんのり甘くて、お腹の底まで染み渡った。\n「トゥントゥンさん、ここはどこですか？」\n「ここは、ラップランドと申します」とトゥントゥンは言った。「あなたがたの世界とは、別の世界です。チェストや扉、ときどき鏡や井戸——そういったものを通って、ごくまれに人間さまがいらっしゃることがあります。もう、千年も、人間さまはここに来ていないのですが」\n「ラップランドって、こんなに寒い場所なの？」\n「いえ。昔は、四季がありました。春も、夏も、秋も、冬も。でも今は——百年ずっと、冬です。氷の女王、フリギアさまが、ラップランドを支配なさってから。雪が降り続け、春は決して来ません」",
+    "questions": [
+      {
+        "q": "ラップランドはどのくらいの間、冬が続いているのですか？",
+        "choices": [
+          "十年",
+          "五十年",
+          "百年",
+          "千年"
+        ],
+        "answer": 2,
+        "explanation": "トゥントゥンは「今は——百年ずっと、冬です」と言っています。「千年」は、人間が来ていない期間のほうです。"
+      },
+      {
+        "q": "「壁一面の本棚」「明らかに、読まれている本」という描写から、トゥントゥンはどんな人物だと考えられますか？",
+        "choices": [
+          "本を集めるのが好きだが、読まずに飾っているだけ",
+          "勉強家で、本をたくさん読んできた、知識のあるピグリン",
+          "本棚は飾りで、本当はネザーの戦士",
+          "本は前の住人が残したもので、トゥントゥン本人は字が読めない"
+        ],
+        "answer": 1,
+        "explanation": "「明らかに、読まれている本だった」「何度も開かれた跡」とあるので、トゥントゥン自身がたくさん読んでいる、知識のあるピグリンだとわかります。"
+      }
+    ]
+  },
+  {
+    "title": "第二章②「予言と密告者の告白」",
+    "text": "　トゥントゥンは、ぽつりと言った。「私は、本当は、もっと温かい場所に住んでおりました。ネザーの、緋色の森に。家族もおりました。でも、ある日、私はラップランドに迷い込んでしまったのです。気づいたら、ここにいて。帰り方が、わからなくて。もう五十年になります」\n　トゥントゥンは、本棚から一冊の古い本を取り出した。\n「お読みします」と言って、ある場所を読み上げた。\n　四人の人間の子どもが／ラップランドの土を踏むとき／氷の女王の支配は終わる／氷は溶け　春が訪れる\n「だから氷の女王は——人間を、恐れているのです。人間がこの国に来たら、自分の支配が終わると。女王は、ラップランド中に密告者を放っております。私も——」\n　トゥントゥンは、顔を伏せた。\n「あなたも、氷の女王の、密告者なんですか？」\n「……人間を見つけたら、すぐに氷の女王に報告するように、と。命令されておりました。逆らえば、家族の住むネザーへの帰り道を、永遠に閉ざすと、脅されておりました」\n　トゥントゥンの目に、涙がたまっていた。\n「あなたは、ふつうの子どもでした。私と同じように、寒さに身を縮めて、家族を心配していて、不安そうで。私は——できませんでした。報告、できません」",
+    "questions": [
+      {
+        "q": "トゥントゥンが氷の女王に脅されていた内容は、どんなことでしたか？",
+        "choices": [
+          "命を奪うと脅された",
+          "家族の住むネザーへの帰り道を、永遠に閉ざすと脅された",
+          "本棚の本をすべて燃やすと脅された",
+          "小屋を雪で埋めると脅された"
+        ],
+        "answer": 1,
+        "explanation": "「逆らえば、家族の住むネザーへの帰り道を、永遠に閉ざすと、脅されておりました」と書かれています。"
+      },
+      {
+        "q": "トゥントゥンがユウキを「報告できません」と決めたのは、どんな気持ちからだと考えられますか？",
+        "choices": [
+          "氷の女王が嫌いになって、いやがらせをしたかったから",
+          "ふつうの子どもとして寒さや不安に震えるユウキを見て、見捨てられなかったから",
+          "報告してもどうせ家族に会えないから、どうでもよくなったから",
+          "本の予言を試してみたかったから"
+        ],
+        "answer": 1,
+        "explanation": "「あなたは、ふつうの子どもでした……私は——できませんでした」と言っています。自分と同じように家族を思う子どもを、利用したくなかったのです。"
+      }
+    ]
+  },
+  {
+    "title": "第二章③「五十年生きてきたかい」",
+    "text": "　ユウキは、立ち上がった。\n「トゥントゥンさんは、どうなるんですか？　報告しなかったら、家族のところには帰れないんでしょう？」\n　トゥントゥンは、少し笑った。哀しそうな笑い方だった。\n「五十年も、帰れていません。もう、家族も、私のことを覚えていないでしょう。私は、ラップランドで朽ちる定めだったのです」\n　トゥントゥンは、ドアの方へユウキを促した。ドアの前で、ユウキは振り返った。\n「トゥントゥンさん。もし——もし、ラップランドの冬が終わったら。春が来たら。一緒にネザーに帰る方法を、探しませんか」\n　トゥントゥンが、目を見開いた。しばらく、ユウキを見ていた。それから、もう一度、笑った。今度は、少しだけ、本当に嬉しそうな笑い方だった。\n「ありがとうございます、ユウキさま。その言葉だけで、五十年、生きてきたかいがありました」\n　ユウキとドンは、トゥントゥンに教えてもらった道を、雪の中を歩いた。空はまだ白くて、雪は止まなかった。でも、ユウキの胸の中には、温かいものが残っていた。",
+    "questions": [
+      {
+        "q": "ユウキはトゥントゥンに、どんな約束をしましたか？",
+        "choices": [
+          "今すぐ氷の女王を倒すこと",
+          "春が来たら、一緒にネザーに帰る方法を探すこと",
+          "ピグリンの仲間を集めてくること",
+          "本棚の本を全部読んであげること"
+        ],
+        "answer": 1,
+        "explanation": "ユウキは「春が来たら。一緒にネザーに帰る方法を、探しませんか」と言いました。"
+      },
+      {
+        "q": "「その言葉だけで、五十年、生きてきたかいがありました」とトゥントゥンが言ったのは、なぜだと考えられますか？",
+        "choices": [
+          "五十年ぶりに誰かに自分の存在を認められ、未来を一緒に考えてくれる人と出会えたから",
+          "ユウキにお茶代を払ってもらえたから",
+          "ユウキが本を一冊買ってくれたから",
+          "ユウキが氷の女王を倒すと約束したから"
+        ],
+        "answer": 0,
+        "explanation": "五十年ひとりで雪国に閉じ込められたトゥントゥンに、ユウキは「一緒に」と声をかけました。孤独な暮らしの中に光が差した瞬間が伝わります。"
+      }
+    ]
+  },
+  {
+    "title": "第三章①「キツネ夫妻とケント・ユナとの再会」",
+    "text": "　雪の中を、ユウキとドンは一時間ほど歩いた。ドンが、急に立ち止まった。耳が、ぴんと立っている。\n　雪の積もった大きな岩のかげから、何かが動いた。岩のかげから、ぴょこっと、顔を出したのは——キツネだった。白い毛並みの、北極キツネ。でも、ふつうのキツネと違って——その子は、二本足で立っていた。そして、人間の言葉を喋った。\n「あら、本当に！　ユウキ、ドン、無事だったのね！」\n「あの……どうして、わたしたちの名前を？」\n「トゥントゥンさんから、伝書バトで連絡をもらったの」と最初のキツネ——奥さんの方——が言った。「ラップランドの、わたしたち反対派のあいだだけで使っている連絡網があるのです。氷の女王の目を盗んで」\n　キツネ夫妻の家は、雪に半分埋もれた、丸い形の家だった。奥さんのキツネが、扉を開けた。家の中は、トゥントゥンの小屋より、もっと暖かかった。\n　でもユウキの目を、もっと引いたものがあった。部屋の中に——ケントと、ユナが、いた。\n「ユウキ！」\n　ユナが、椅子から飛び上がった。走ってきて、ユウキにぎゅっと抱きついた。\n「ユウキ、よかったぁ！　アタシ、すっごい心配したんだから！」",
+    "questions": [
+      {
+        "q": "キツネ夫妻はどうやってユウキたちの名前を知っていたのですか？",
+        "choices": [
+          "氷の女王から教えてもらった",
+          "ケントとユナから聞いた",
+          "トゥントゥンから伝書バトで連絡をもらった",
+          "ドンの首輪に名前が書いてあった"
+        ],
+        "answer": 2,
+        "explanation": "奥さんのキツネは「トゥントゥンさんから、伝書バトで連絡をもらったの」と言っています。反対派の動物たちが、女王の目を盗んで連絡を取り合っているのです。"
+      },
+      {
+        "q": "再会したケントの目が「少し赤かった」のは、どんな気持ちの表れだと考えられますか？",
+        "choices": [
+          "雪の寒さで目が痛かっただけ",
+          "ユナと仲よくしすぎて、目を擦った",
+          "ユウキを心配しすぎて、泣きそうになっていた",
+          "ユウキに怒っていた"
+        ],
+        "answer": 2,
+        "explanation": "「感情をすぐに出すタイプではない」ケントの目が赤いということは、心の中ではユウキのことをとても心配していた、ということが伝わります。"
+      }
+    ]
+  },
+  {
+    "title": "第三章②「予言の四人とアズロン」",
+    "text": "　食事のあと、奥さんのキツネが言った。\n「ユウキ、ケント、ユナ。それから、ドンさま。あなたがたが、予言の四人です」\n「でも」とケントが言った。「ぼくたち、人間が三人と、犬一匹だよ」\n「予言には『四人の子ども』としか書かれていません。人間に限るとは書かれていない。ドンさまも、立派なこの旅の子の一人です」\n「来るって、もしかして」とユナが言った。「アタシたちが、女王と戦うってこと？」\n「戦う、という言い方は正しくないでしょう。予言はただ、こう言っているだけです。四人の子どもがラップランドを踏むとき、女王の支配は終わる、と」\n「でも、女王が黙って終わらせるとは思えない」とケントが言った。\n　頭の良い指摘だった。\n「その通りです、ケントさま」と奥さんは言った。「だから、あなたがたは、お会いになるべき方がおられます。アズロンさまです。ラップランドの真の王です」\n「氷の下に住んでおられる、古くからのお方」と旦那さん。「ラップランドの中心に、大きな凍った湖がございます。アズロンさまは、その湖の底に住んでおられる」\n　その夜、ユウキは、夢を見た。大きな青い目が、氷の下から、こちらを見ている夢。遠くから、声が聞こえた気がした。「よく来た、四人の子よ。」",
+    "questions": [
+      {
+        "q": "「予言の四人」は、どんなメンバーですか？",
+        "choices": [
+          "人間が四人",
+          "人間が三人と、犬が一匹",
+          "人間が二人と、キツネが二匹",
+          "人間が一人と、動物が三匹"
+        ],
+        "answer": 1,
+        "explanation": "「ぼくたち、人間が三人と、犬一匹だよ」とケントが言うと、奥さんのキツネは「ドンさまも、立派なこの旅の子の一人」と答えました。"
+      },
+      {
+        "q": "「でも、女王が黙って終わらせるとは思えない」というケントの言葉に、奥さんが「その通り」と深くうなずいたのは、なぜですか？",
+        "choices": [
+          "ケントの考えが、ただの思いつきで面白かったから",
+          "予言が来てもそのままでは終わらない、という大事な点をケントが言い当てたから",
+          "ケントを子ども扱いしないと約束したから",
+          "ケントが大声を出したので、しかたなくうなずいた"
+        ],
+        "answer": 1,
+        "explanation": "予言があっても女王は抵抗するだろう、という現実的な見方をケントが先回りして言ったので、夫妻は「だからアズロンに会わせる」と次の話を始められたのです。"
+      }
+    ]
+  },
+  {
+    "title": "第四章①「氷の女王フリギア」",
+    "text": "　朝、四人を起こしたのは、キツネ夫妻の慌てた声だった。\n「氷の女王の馬車が、この方向に向かっております。三十分以内には、ここに着くでしょう」\n　四人は、急いで支度をした。アズロンさまのおられる凍った湖は、東。歩き始めてしばらくして、遠くから、シャンシャン、と鈴のような音が聞こえてきた。\n　雪の上に——馬車が来ていた。白い馬車。引いているのは、白いオオカミの群れだった。ドンによく似た毛並みのオオカミが六匹、馬車を引いていた。でも、目だけが——赤かった。\n　馬車が、四人の前に滑るように止まった。中から、降りてきたのは——女の人だった。すごく、きれいだった。背が高くて、痩せていて、肌が雪のように白い。長い銀色の髪。純白のドレス。頭には、銀の王冠。でも、目だけが——冷たかった。氷の色だった。\n　女王は、四人を見回した。最後に——ケントを見た。ケントの目を見て、女王は微笑んだ。\n「ようこそ。人間の子供たち。わたくしは、フリギア。このラップランドの女王です」",
+    "questions": [
+      {
+        "q": "女王の馬車を引いていたのは、何でしたか？",
+        "choices": [
+          "白いトナカイ六頭",
+          "目が赤い、白いオオカミ六匹",
+          "黒いウマ六頭",
+          "氷でできた馬の像"
+        ],
+        "answer": 1,
+        "explanation": "「白いオオカミの群れだった。ドンによく似た毛並みのオオカミが六匹、馬車を引いていた。でも、目だけが——赤かった」と書かれています。"
+      },
+      {
+        "q": "女王が四人の中で「最後にケントを見た」のは、なぜだと考えられますか？",
+        "choices": [
+          "ケントが一番背が高かったから",
+          "ケントの賢さに目をつけて、利用しようと狙いを定めたから",
+          "ケントが手を挙げたから",
+          "ケントが女王に似ていたから"
+        ],
+        "answer": 1,
+        "explanation": "このあと女王はケントだけに「賢そうなお顔」と話しかけ、本を差し出します。最初から、賢いケントを選んで狙っていたことがわかります。"
+      }
+    ]
+  },
+  {
+    "title": "第四章②「魔法の書とケントの心」",
+    "text": "　女王は、銀のお盆を持っていた。お盆の上に、本が乗っている。古い革表紙の、たくさんの本だった。\n「これを見て、ケント」と女王は言った。「これは、ラップランドに伝わる、古の魔法の書。魔法のエンチャント、レッドストーンの究極の理論、世界の構造の秘密。すべてが、この本の中にあるの」\n　ケントの目が、本に釘付けになった。\n「あなたなら、わかるでしょう。あなたの賢さなら、これらの本を理解できる」\n「ケント、あなたは特別。ここにいる他の子たちとは違うわ。賢さは、選ばれた者だけのもの。あなたのような子が、こんな冒険ごっこに連れ回されるのは、もったいない」\n　ケントの手が、わずかに震えた。\n　女王は、青い宝石が三つはまった本を、ケントの手に押し付けた。「これは、ほんの少しの試食。今夜、お城へ来なさい。一人で。仲間には、内緒で」\n「もし、お城に来なければ、この本のページは、白く消えてしまいます。あなたは何も学べない。永遠に」\n　女王は馬車に乗り込んだ。馬車は、シャンシャンと鈴を鳴らしながら、雪原の向こうに消えていった。\n　ケントの手には、青い宝石の本が握られていた。ぎゅっと握って、離さなかった。\n「ケント、その本、置いていこう」とユナが言った。\n「いやだ」とケントは言った。声が、いつものケントの声じゃなかった。",
+    "questions": [
+      {
+        "q": "女王はケントに、どうやってお城に来るように言いましたか？",
+        "choices": [
+          "ユウキとユナを連れて、みんなで来るように",
+          "今夜、一人で、仲間には内緒で来るように",
+          "馬車を迎えに行かせるから、待っているように",
+          "明日の朝、ドンを置いてくるように"
+        ],
+        "answer": 1,
+        "explanation": "「今夜、お城へ来なさい。一人で。仲間には、内緒で」と女王は言いました。仲間から切り離そうとしているのがわかります。"
+      },
+      {
+        "q": "「ぼくたちは、こんな冒険ごっこに連れ回されるのは、もったいない」という言い方は、何を狙ったものですか？",
+        "choices": [
+          "本当にケントの将来を心配する、優しい忠告",
+          "ケントだけが特別だと持ち上げて、仲間と引き離そうとする悪意のある言葉",
+          "ユナとユウキをほめている言葉",
+          "ドンを馬車に乗せたいというお願い"
+        ],
+        "answer": 1,
+        "explanation": "ユウキやユナのことを「他の子たち」「冒険ごっこ」と下に見せ、ケントだけを特別扱いして仲間との間に壁を作ろうとしています。"
+      }
+    ]
+  },
+  {
+    "title": "第四章後半①「ケアの仕方がわからない」",
+    "text": "　雪原を、四人と一匹とキツネ夫妻は、急いで歩いた。女王と会ってから、ケントはほとんど喋らなかった。ユナが何度か話しかけても、「うん」とか「そう」とかしか答えない。ずっと、何かを考えているようだった。\n　ユナが、ユウキの隣に並んで、小さな声で言った。\n「ねえ、ケント、大丈夫かな」\n「……わかんない」\n「あの本、ちょっとやばくない？　明らかに、女王が罠で渡したやつでしょ」\n「うん」\n「でもケント、本のこと言われると、弱いから」とユナは言った。「アタシたちが、もう少しケアしてあげなきゃ」\n　ユウキはうなずいた。でも、その「ケアの仕方」が、わからなかった。ケントは、自分の興味のあるものが目の前にあると、止められない。前にレッドストーンの実験で爆発したのも、新しい回路の本を読みすぎて、危険な実験まで試してしまったからだった。\n　今度の本は、爆発じゃ済まないかもしれない。",
+    "questions": [
+      {
+        "q": "ケントは前にも、何かをやりすぎて事件を起こしていました。それはどんな出来事でしたか？",
+        "choices": [
+          "本を読みすぎて、目が悪くなった",
+          "新しい回路の本を読みすぎて、危険な実験まで試して爆発した",
+          "魔法の練習をしすぎて、家を凍らせた",
+          "勉強しすぎて、寝込んでしまった"
+        ],
+        "answer": 1,
+        "explanation": "「前にレッドストーンの実験で爆発したのも、新しい回路の本を読みすぎて、危険な実験まで試してしまったからだった」と書かれています。"
+      },
+      {
+        "q": "ユウキが「『ケアの仕方』が、わからなかった」と感じたのは、なぜですか？",
+        "choices": [
+          "ケントのことが、嫌いになってしまったから",
+          "興味のあるものが目の前にあると止められない弟を、どう止めればいいか分からないから",
+          "キツネ夫妻が手伝ってくれないから",
+          "ユナが何もしてくれないから"
+        ],
+        "answer": 1,
+        "explanation": "ケントの性格を知っているからこそ、本を取り上げるだけでは済まないと分かっています。「今度の本は、爆発じゃ済まないかもしれない」という不安がにじみます。"
+      }
+    ]
+  },
+  {
+    "title": "第四章後半②「凍った湖のアズロン」",
+    "text": "　二時間ほど歩いて——四人は、凍った湖に着いた。湖は、巨大だった。円形の、地平線まで届くような大きさ。表面はすべて氷で覆われていて、雪に薄く埋もれていた。氷は青みがかっていて、透明で、まるで巨大な鏡のように、空の色を映していた。湖の真ん中に——氷の島のようなものが見える。その上に、何かの石でできた、古い祭壇のようなものが建っていた。\n　旦那さんのキツネが、湖の縁に近づいた。氷を、こんこんと叩いた。しばらく、何も起こらなかった。でも、氷の下から——青い光が、ゆっくりと広がり始めた。最初は小さな点だった光が、だんだん、大きくなった。やがて——湖全体の氷の下が、青く光った。\n　巨大な影が、氷の下にあった。ふつうのモブの大きさじゃなかった。マイクラのエルダーガーディアンを、何倍にもしたような大きさ。長い、光るトゲのような触手が、影の周りに広がっている。\n　そして——目が、見えた。大きな、青い目。氷の下から、四人を見上げていた。その目は、怖くなかった。深くて、強くて、ずっとずっと前から、この場所を見守ってきた、そういう目だった。\n　頭の中に、声が響いた。誰の口からも出ていない声。直接、心に届く声。\n「よく来た。四人の子よ。わたしの名は、アズロン。ラップランドの真の王である。」",
+    "questions": [
+      {
+        "q": "アズロンの姿は、マイクラの何に似ていると書かれていますか？",
+        "choices": [
+          "エンダードラゴンを何倍にもしたもの",
+          "ウィザーを何倍にもしたもの",
+          "エルダーガーディアンを何倍にもしたもの",
+          "アイアンゴーレムを何倍にもしたもの"
+        ],
+        "answer": 2,
+        "explanation": "「マイクラのエルダーガーディアンを、何倍にもしたような大きさ」と書かれています。"
+      },
+      {
+        "q": "アズロンの「目は、怖くなかった」と書かれていることから、アズロンはどんな存在だと考えられますか？",
+        "choices": [
+          "見た目は強そうでも、本当はとても弱い存在",
+          "見た目は大きく不思議でも、ラップランドを長く見守ってきた信頼できる存在",
+          "ユウキたちを食べようと狙っている敵",
+          "氷の女王の手下"
+        ],
+        "answer": 1,
+        "explanation": "「深くて、強くて、ずっとずっと前から、この場所を見守ってきた、そういう目」とあります。見た目に反して、味方として信頼できる「真の王」だとわかります。"
+      }
+    ]
+  }
+];
+
+// ===== SAVE / LOAD =====
+const SAVE_KEY = 'narnia_part1_save';
+const LOG_KEY = 'narnia_part1_save_log';
+let storageOK = false;
+try { localStorage.setItem('_test','1'); localStorage.removeItem('_test'); storageOK = true; } catch(e) {}
+
+function flushReadingTimer() {
+  if (readingStartTime === null) return;
+  const now = Date.now();
+  const elapsed = Math.floor((now - readingStartTime) / 1000);
+  if (log.sections[currentSection]) {
+    log.sections[currentSection].readingSeconds += elapsed;
+  }
+  readingStartTime = now;
+}
+
+function saveProgress() {
+  if (!storageOK) return;
+  if (phase === 'reading') flushReadingTimer();
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      section: currentSection, question: currentQuestion,
+      score: score, phase: phase,
+      answers: answers, log: log, v: 3
+    }));
+  } catch(e) {}
+}
+function loadProgress() {
+  if (!storageOK) return null;
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (d && d.v === 3 && d.section < sections.length) return d;
+  } catch(e) {}
+  return null;
+}
+function clearProgress() {
+  if (!storageOK) return;
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+}
+function saveLogArchive() {
+  if (!storageOK) return;
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch(e) {}
+}
+
+// ===== GAME STATE =====
+let currentSection = 0;
+let currentQuestion = 0;
+let score = 0; // 1回で正解した問題数
+let totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);
+let phase = 'title';
+
+// answers[sec][q] = { wrongChoices: [2,1], locked: false }
+function makeFreshAnswers() {
+  return sections.map(s => s.questions.map(() => ({ wrongChoices: [], locked: false })));
+}
+let answers = makeFreshAnswers();
+
+// ===== LOG =====
+function makeFreshLog() {
+  return {
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    sections: sections.map(s => ({
+      title: s.title,
+      readingSeconds: 0,
+      rereadCount: 0,
+      questions: s.questions.map(q => ({
+        q: q.q,
+        wrongChoicesTexts: [],
+        attemptCount: 0,
+        firstTryCorrect: false
+      }))
+    }))
+  };
+}
+let log = makeFreshLog();
+
+// 読書タイマー
+let readingStartTime = null;
+function startReadingTimer() { readingStartTime = Date.now(); }
+function stopReadingTimer() {
+  if (readingStartTime === null) return;
+  const elapsed = Math.floor((Date.now() - readingStartTime) / 1000);
+  if (log.sections[currentSection]) {
+    log.sections[currentSection].readingSeconds += elapsed;
+  }
+  readingStartTime = null;
+}
+
+// 10秒ごとに読書中の時間をセーブ（中断対策）
+setInterval(() => {
+  if (phase === 'reading') saveProgress();
+}, 10000);
+
+// ページを離れるときもセーブ
+window.addEventListener('beforeunload', () => {
+  if (phase !== 'title' && phase !== 'final') saveProgress();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && phase !== 'title' && phase !== 'final') saveProgress();
+});
+
+// ===== RENDER =====
+function render() {
+  const content = document.getElementById('content');
+  switch (phase) {
+    case 'title': renderTitle(content); break;
+    case 'reading': renderReading(content); break;
+    case 'quiz': renderQuiz(content); break;
+    case 'final': renderFinal(content); break;
+  }
+}
+
+function renderTitle(el) {
+  const saved = loadProgress();
+  const resumeBtn = saved && saved.phase !== 'title' && saved.phase !== 'final'
+    ? `<button class="mc-btn" onclick="resumeGame()" style="margin-bottom:10px">つづきから（${sections[saved.section].title}）</button>`
+    : '';
+  el.innerHTML = `
+    <div class="title-screen">
+      <h1>❄️ ラップランドの冬 (前編)</h1>
+      <div class="subtitle">〜 国語クイズ 〜</div>
+      <p style="font-size:13px; color:#6b5a3a; margin-bottom:6px;">
+        「ラップランドの冬」を読んで<br>クイズに答えよう！
+      </p>
+      <p style="font-size:12px; color:#8a7a5a; margin-bottom:12px;">
+        プロローグ 〜 第四章<br>
+        全${sections.length}パート・${totalQuestions}問
+      </p>
+      <p style="font-size:11px; color:#8a7a5a; margin-bottom:16px; line-height:1.7;">
+        ★ クイズ中は本文は見られないよ<br>
+        ★ まちがえたら、もう一度読みなおし！<br>
+        ★ 正解するまで次へは進めません
+      </p>
+      ${resumeBtn}
+      <button class="mc-btn ${resumeBtn ? 'gray' : ''}" onclick="startGame()">はじめから</button>
+    </div>
+  `;
+  setTimeout(() => showSpeech('Yuuki', 'がんばろう！', 2500), 500);
+  setTimeout(() => showSpeech('Kent', 'ちゃんと読んでね', 2500), 1200);
+}
+
+function renderReading(el) {
+  const sec = sections[currentSection];
+  const progress = currentSection / sections.length * 100;
+  const qIdx = currentQuestion;
+  const ans = answers[currentSection][qIdx];
+  const isRetry = ans && ans.wrongChoices.length > 0;
+  const hint = isRetry
+    ? '<div style="background:#fff3d0; border:2px solid #e0b020; padding:8px 10px; border-radius:4px; font-size:13px; color:#8a5a10; margin-bottom:8px;">🔍 もう一度じっくり読んで、答えをさがしてみよう！</div>'
+    : '';
+  el.innerHTML = `
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="score-display">1回で正解: <span class="num">${score}</span> / ${totalQuestions}</div>
+    <div class="story-header">${sec.title}</div>
+    ${hint}
+    <div class="story-text">${applyFurigana(sec.text.replace(/\n/g, '<br>'))}</div>
+    <button class="mc-btn" onclick="goToQuiz()">${isRetry ? 'もう一度クイズに挑戦 →' : '問題へすすむ →'}</button>
+  `;
+  startReadingTimer();
+}
+
+function renderQuiz(el) {
+  const sec = sections[currentSection];
+  const q = sec.questions[currentQuestion];
+  const ans = answers[currentSection][currentQuestion];
+  const progress = (currentSection + (currentQuestion + 1) / sec.questions.length) / sections.length * 100;
+  const qNum = sections.slice(0, currentSection).reduce((s, sec) => s + sec.questions.length, 0) + currentQuestion + 1;
+
+  const choicesHtml = q.choices.map((c, i) => {
+    let cls = 'choice-btn';
+    let disabled = '';
+    if (ans.locked) {
+      disabled = 'disabled';
+      if (i === q.answer) cls += ' correct';
+    } else if (ans.wrongChoices.includes(i)) {
+      disabled = 'disabled';
+      cls += ' past-wrong';
+    }
+    return `<button class="${cls}" onclick="selectAnswer(${i})" id="choice${i}" ${disabled}>${['A','B','C','D'][i]}. ${applyFurigana(c)}</button>`;
+  }).join('');
+
+  let feedbackHtml = '';
+  if (ans.locked) {
+    feedbackHtml = `
+      <div class="result-box correct">⭕ 正解！<br>${applyFurigana(q.explanation)}</div>
+      <button class="mc-btn" onclick="nextStep()" style="margin-top:6px">つぎへ →</button>
+    `;
+  } else if (ans.wrongChoices.length > 0) {
+    feedbackHtml = `
+      <div class="result-box wrong">❌ ちがうよ…<br>もう一度お話を読んで、ヒントをさがそう！</div>
+      <button class="mc-btn reread-btn" onclick="goBackToReading()" style="margin-top:6px; font-size:15px; padding:12px 18px;">📖 もう一度読む</button>
+    `;
+  }
+
+  // 未回答・未間違いなら「もう一度読む」も下に表示
+  const extraReread = (!ans.locked && ans.wrongChoices.length === 0)
+    ? '<button class="mc-btn reread-btn" onclick="goBackToReading()" style="margin-top:14px">📖 もう一度読む</button>'
+    : '';
+
+  el.innerHTML = `
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="score-display">1回で正解: <span class="num">${score}</span> / ${totalQuestions}</div>
+    <div class="quiz-header">問${qNum} / ${totalQuestions}（${sec.title}）</div>
+    <div class="quiz-question">${applyFurigana(q.q)}</div>
+    <div id="choices">${choicesHtml}</div>
+    <div id="feedback">${feedbackHtml}</div>
+    ${extraReread}
+  `;
+}
+
+function selectAnswer(idx) {
+  const ans = answers[currentSection][currentQuestion];
+  if (ans.locked) return;
+  if (ans.wrongChoices.includes(idx)) return;
+
+  const sec = sections[currentSection];
+  const q = sec.questions[currentQuestion];
+  const correct = idx === q.answer;
+  const logQ = log.sections[currentSection].questions[currentQuestion];
+  logQ.attemptCount++;
+
+  if (correct) {
+    ans.locked = true;
+    if (logQ.attemptCount === 1) {
+      score++;
+      logQ.firstTryCorrect = true;
+    }
+    showSpeech('Yuuki', 'せいかい！', 2000);
+  } else {
+    ans.wrongChoices.push(idx);
+    logQ.wrongChoicesTexts.push(q.choices[idx]);
+    showSpeech('Kent', 'ちがうよ！', 2000);
+  }
+
+  saveProgress();
+  render();
+}
+
+function nextStep() {
+  const sec = sections[currentSection];
+  currentQuestion++;
+  if (currentQuestion >= sec.questions.length) {
+    currentQuestion = 0;
+    currentSection++;
+    if (currentSection >= sections.length) {
+      phase = 'final';
+      log.completedAt = new Date().toISOString();
+      saveLogArchive();
+      clearProgress();
+    } else {
+      phase = 'reading';
+    }
+  } else {
+    phase = 'quiz';
+  }
+  saveProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goBackToReading() {
+  if (log.sections[currentSection]) {
+    log.sections[currentSection].rereadCount++;
+  }
+  phase = 'reading';
+  saveProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goToQuiz() {
+  stopReadingTimer();
+  phase = 'quiz';
+  saveProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function formatTime(sec) {
+  if (sec < 60) return sec + '秒';
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s > 0 ? m + '分' + s + '秒' : m + '分';
+}
+
+function renderFinal(el) {
+  const pct = Math.round(score / totalQuestions * 100);
+  let stars, msg;
+  if (pct >= 90) { stars = '⭐⭐⭐'; msg = 'すばらしい！しっかり読めてる！'; }
+  else if (pct >= 70) { stars = '⭐⭐'; msg = 'よくできました！'; }
+  else if (pct >= 50) { stars = '⭐'; msg = 'もう少しじっくり読んでみよう！'; }
+  else { stars = ''; msg = 'もう一度ゆっくり読んでみよう！'; }
+
+  const totalReadingSec = log.sections.reduce((s, sec) => s + sec.readingSeconds, 0);
+  const totalRereadCount = log.sections.reduce((s, sec) => s + sec.rereadCount, 0);
+  const totalWrongAnswers = log.sections.reduce((s, sec) =>
+    s + sec.questions.reduce((ss, q) => ss + q.wrongChoicesTexts.length, 0), 0);
+
+  const sectionDetails = log.sections.map((sec) => {
+    const wrongQs = sec.questions.filter(q => q.wrongChoicesTexts.length > 0);
+    const wrongHtml = wrongQs.length ? wrongQs.map(q => `
+      <div class="log-wrong-item">
+        <div class="log-q">Q: ${q.q}</div>
+        <div class="log-a">えらんだ答え: ${q.wrongChoicesTexts.map(t => '「' + t + '」').join(' → ')}</div>
+      </div>
+    `).join('') : '<div class="log-ok-item">✨ 全問1回で正解！</div>';
+    return `
+      <div class="log-section">
+        <div class="log-title">${sec.title}</div>
+        <div class="log-row">📖 読書時間: ${formatTime(sec.readingSeconds)}　🔄 読み直し: ${sec.rereadCount}回</div>
+        ${wrongHtml}
+      </div>
+    `;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="final-score">
+      <h2>🏆 けっか発表 🏆</h2>
+      <div class="stars">${stars}</div>
+      <div class="big-score">${score} <span>/ ${totalQuestions}</span></div>
+      <p style="font-size:12px; color:#6b5a3a; margin:2px 0 10px;">1回で正解した数</p>
+      <p style="font-size:15px; color:#3b2a14; margin:10px 0;">${msg}</p>
+      <p style="font-size:13px; color:#6b5a3a; margin-bottom:12px;">正答率 ${pct}%</p>
+
+      <div class="log-summary-box">
+        <h3>📊 読書ログ</h3>
+        <div class="log-row">⏱ 読書時間の合計: <b>${formatTime(totalReadingSec)}</b></div>
+        <div class="log-row">📖 もう一度読んだ回数: <b>${totalRereadCount}回</b></div>
+        <div class="log-row">❌ まちがえた回数: <b>${totalWrongAnswers}回</b></div>
+      </div>
+
+      <details class="log-details">
+        <summary>パートごとの詳細をみる</summary>
+        <div class="log-sections">${sectionDetails}</div>
+      </details>
+
+      <button class="mc-btn" onclick="copyLog()" style="margin-top:14px">📋 ログをコピー</button>
+      <button class="mc-btn gray" onclick="resetGame()">もう一度あそぶ</button>
+    </div>
+  `;
+
+  if (pct >= 70) {
+    showSpeech('Yuuki', 'やったね！', 3000);
+  } else {
+    showSpeech('Kent', 'もう一回！', 3000);
+  }
+}
+
+function copyLog() {
+  const lines = [];
+  lines.push('❄️ ラップランドの冬 (前編)クイズ ログ');
+  lines.push('はじめ: ' + (log.startedAt ? new Date(log.startedAt).toLocaleString('ja-JP') : '-'));
+  lines.push('おわり: ' + (log.completedAt ? new Date(log.completedAt).toLocaleString('ja-JP') : '未完'));
+  lines.push('1回で正解: ' + score + ' / ' + totalQuestions);
+  const totalReadingSec = log.sections.reduce((s, sec) => s + sec.readingSeconds, 0);
+  const totalRereadCount = log.sections.reduce((s, sec) => s + sec.rereadCount, 0);
+  lines.push('読書時間の合計: ' + formatTime(totalReadingSec));
+  lines.push('もう一度読んだ回数: ' + totalRereadCount);
+  lines.push('');
+  log.sections.forEach(sec => {
+    lines.push('■ ' + sec.title);
+    lines.push('  読書時間: ' + formatTime(sec.readingSeconds) + ' / 読み直し: ' + sec.rereadCount + '回');
+    sec.questions.forEach((q, i) => {
+      if (q.wrongChoicesTexts.length > 0) {
+        lines.push('  Q' + (i+1) + ': ' + q.q);
+        lines.push('    間違えた: ' + q.wrongChoicesTexts.map(t => '「' + t + '」').join(' → '));
+      }
+    });
+    lines.push('');
+  });
+  const text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => alert('ログをコピーしました！'),
+      () => fallbackCopy(text)
+    );
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); alert('ログをコピーしました！'); }
+  catch(e) { alert('コピーできませんでした。画面のテキストを長押しでコピーしてね。'); }
+  document.body.removeChild(ta);
+}
+
+// ===== GAME CONTROL =====
+function startGame() {
+  currentSection = 0;
+  currentQuestion = 0;
+  score = 0;
+  answers = makeFreshAnswers();
+  log = makeFreshLog();
+  phase = 'reading';
+  saveProgress();
+  render();
+}
+
+function resumeGame() {
+  const d = loadProgress();
+  if (!d) { startGame(); return; }
+  currentSection = d.section;
+  currentQuestion = d.question;
+  score = d.score;
+  phase = d.phase;
+  if (d.answers) answers = d.answers;
+  if (d.log) log = d.log;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function resetGame() {
+  currentSection = 0;
+  currentQuestion = 0;
+  score = 0;
+  phase = 'title';
+  clearProgress();
+  render();
+  window.scrollTo(0, 0);
+}
+
+// ===== ふりがなタップ処理 =====
+document.addEventListener('click', function(e) {
+  const t = e.target;
+  if (t && t.classList && t.classList.contains('kanji-pop')) {
+    const wasActive = t.classList.contains('active');
+    document.querySelectorAll('.kanji-pop.active').forEach(a => { a.classList.remove('active'); a.classList.remove('popup-below'); });
+    if (!wasActive) {
+      t.classList.add('active');
+      // 上端で popup が container の overflow に切れる場合は下向きに反転
+      const _k = t.getBoundingClientRect();
+      let _flip = _k.top < 50;
+      if (!_flip) {
+        let _p = t.parentElement;
+        while (_p && _p !== document.body) {
+          const _st = getComputedStyle(_p);
+          if (_st.overflowY === 'auto' || _st.overflowY === 'scroll' || _st.overflowY === 'hidden') {
+            if (_k.top - _p.getBoundingClientRect().top < 50) _flip = true;
+            break;
+          }
+          _p = _p.parentElement;
+        }
+      }
+      if (_flip) t.classList.add('popup-below');
+    }
+    e.stopPropagation();
+    return;
+  }
+  // 外側タップで全ポップアップを閉じる
+  document.querySelectorAll('.kanji-pop.active').forEach(a => { a.classList.remove('active'); a.classList.remove('popup-below'); });
+});
+
+// ===== INIT =====
+try {
+  buildGrass();
+  buildCharacters();
+  render();
+} catch(e) {
+  document.getElementById('content').innerHTML =
+    '<div style="padding:20px;color:red;font-size:16px;">エラー: ' + e.message + '</div>';
+}
+window.onerror = function(msg, url, line) {
+  var el = document.getElementById('content');
+  if (el) el.innerHTML = '<div style="padding:20px;color:red;font-size:16px;">エラー(L' + line + '): ' + msg + '</div>';
+};
+</script>
+</body>
+</html>
